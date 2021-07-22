@@ -60,3 +60,6 @@ test-suite.log
 /data/*metainfo.xml
 man/amsynth.1
 man/*/amsynth.1
+pkg/**
+tmp/**
+*.tar.*
