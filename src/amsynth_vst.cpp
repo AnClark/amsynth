@@ -558,10 +558,23 @@ AEffect * VSTPluginMain(audioMasterCallback audioMaster)
 
 #if _WIN32
 
-__declspec(dllexport)
-extern "C" AEffect * MAIN(audioMasterCallback audioMaster)
+/** Entrance for MSVC */
+extern "C"
+AEffect * MAIN(audioMasterCallback audioMaster)
 {
 	return VSTPluginMain (audioMaster);
+}
+
+/** Entrance for CMake */
+extern "C" {
+__attribute__ ((visibility ("default")))
+AEffect* wrap (audioMasterCallback audioMaster) asm ("main");
+
+AEffect* wrap (audioMasterCallback audioMaster)
+{
+	return VSTPluginMain (audioMaster);
+}
+
 }
 
 #else

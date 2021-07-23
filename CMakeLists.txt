@@ -292,7 +292,9 @@ if (CONFIG_VST)
     endif ()
 
     # Must export VST main entry, or hosts won't recognize
-    target_link_options (${PROJECT_NAME}_vst PUBLIC "-exported_symbol-regex \"VSTPluginMain|main\"")
+    if (NOT WIN32)
+        target_link_options (${PROJECT_NAME}_vst PUBLIC "-exported_symbol-regex \"VSTPluginMain|main\"")
+    endif ()
 
 endif ()
 
