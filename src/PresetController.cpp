@@ -37,6 +37,8 @@
 #ifndef _WIN32
 #include <dirent.h>
 #include <unistd.h>
+#else
+#include <io.h>
 #endif
 
 #include "gettext.h"
@@ -419,24 +421,48 @@ static void scan_preset_bank(const std::string dir_path, const std::string file_
 
 static void scan_preset_banks(const std::string dir_path, bool read_only)
 {
-#ifndef _WIN32
+	std::vector<std::string> filenames;
+
+#if _WIN32
+	/** Implement preset scanner on Windows
+	 * Reference: https://www.cnblogs.com/collectionne/p/6815924.html
+	 */
+    intptr_t handle;
+    _finddata_t findData;
+	const std::string dir_path_for_search(dir_path + "\\*.*");
+
+    handle = _findfirst(dir_path_for_search.c_str(), &findData);    // Find the first file
+    if (handle == -1)
+        return;
+
+    do
+    {
+        if (findData.attrib & _A_SUBDIR
+            && strcmp(findData.name, ".") == 0
+            && strcmp(findData.name, "..") == 0
+            )    // If sub directory or "."/".." detected, ignore
+            continue;
+        else
+			filenames.push_back(std::string(findData.name));
+    } while (_findnext(handle, &findData) == 0);    // Find next file
+
+    _findclose(handle);    // Close search handle
+#else
 	DIR *dir = opendir(dir_path.c_str());
 	if (!dir)
 		return;
-
-	std::vector<std::string> filenames;
 
 	struct dirent *entry;
 	while ((entry = readdir(dir)))
 		filenames.push_back(std::string(entry->d_name));
 
 	closedir(dir);
+#endif
 
 	std::sort(filenames.begin(), filenames.end());
 
 	for (auto &filename : filenames)
 		scan_preset_bank(dir_path, filename, read_only);
-#endif
 }
 
 static std::string sFactoryBanksDirectory;
