@@ -105,6 +105,9 @@ include_directories (
     ${GTK2_INCLUDE_DIRS}
 )
 
+# Enable -fPIC to let static library link properly
+add_compile_options (-fPIC)
+
 
 #
 # Core components
@@ -177,22 +180,10 @@ if (CONFIG_GUI)
     )
 endif ()
 
-if (CONFIG_STANDALONE)
-    add_library (${PROJECT_NAME}_core STATIC
-        ${LIBCORE_SRC}
-    )
-
-    add_library (${PROJECT_NAME}_dsp STATIC
-        ${LIBDSP_SRC}
-    )
-
-    if (CONFIG_GUI)
-        add_library (${PROJECT_NAME}_gui STATIC
-            ${LIBGUI_SRC}
-        )
-    endif ()
-
-endif ()
+add_library (${PROJECT_NAME}_core STATIC
+    ${LIBCORE_SRC}
+    ${LIBDSP_SRC}
+)
 
 
 #
@@ -253,11 +244,11 @@ if (CONFIG_STANDALONE)
         ${AMSYNTH_STANDALONE_SRC}
         ${AMSYNTH_STANDALONE_GUI_SRC}
         ${AMSYNTH_STANDALONE_NSM_SRC}
+        ${LIBGUI_SRC}
     )
 
     target_link_libraries (${PROJECT_NAME} PRIVATE
         ${PROJECT_NAME}_core
-        ${PROJECT_NAME}_dsp
         ${ALSA_LIBRARIES}
         ${JACK_LIBRARIES}
         ${LIBLO_LIBRARIES}
@@ -266,7 +257,6 @@ if (CONFIG_STANDALONE)
 
     if (CONFIG_GUI)
         target_link_libraries (${PROJECT_NAME} PRIVATE
-            ${PROJECT_NAME}_gui
             ${GTK2_LIBRARIES}
         )
     endif ()
@@ -282,13 +272,16 @@ if (CONFIG_VST)
     add_library (${PROJECT_NAME}_vst SHARED
         src/amsynth_vst.cpp
         vendor/vestige/aeffectx.h
-        ${LIBCORE_SRC}
-        ${LIBDSP_SRC}
         ${LIBGUI_SRC}
+    )
+    target_link_libraries (${PROJECT_NAME}_vst PRIVATE
+        ${PROJECT_NAME}_core
     )
 
     if (CONFIG_GUI)
-        target_link_libraries (${PROJECT_NAME}_vst PRIVATE ${GTK2_LIBRARIES})
+        target_link_libraries (${PROJECT_NAME}_vst PRIVATE
+            ${GTK2_LIBRARIES}
+        )
     endif ()
 
     # Disable "cast from 'gpointer' {aka 'void*'} to 'long int' loses precision" warning on Windows
@@ -311,17 +304,18 @@ if (CONFIG_LV2)
     add_library (${PROJECT_NAME}_lv2 SHARED
         src/amsynth_lv2.cpp
         src/amsynth_lv2.h
-        ${LIBCORE_SRC}
-        ${LIBDSP_SRC}
+    )
+    target_link_libraries (${PROJECT_NAME}_lv2 PRIVATE
+        ${PROJECT_NAME}_core
     )
     target_link_options (${PROJECT_NAME}_lv2 PRIVATE "-export-symbols-regex \"lv2_descriptor\"")
 
     add_library (${PROJECT_NAME}_lv2_gtk SHARED
         src/amsynth_lv2_ui_gtk.cpp
-        ${LIBCORE_SRC}
         ${LIBGUI_SRC}
     )
     target_link_libraries (${PROJECT_NAME}_lv2_gtk PRIVATE
+        ${PROJECT_NAME}_core
         ${LV2_LIBRARIES}
     )
     target_link_options (${PROJECT_NAME}_lv2_gtk PRIVATE "-export-symbols-regex \"lv2_descriptor\"")
