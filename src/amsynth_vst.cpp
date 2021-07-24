@@ -49,8 +49,10 @@
 
 #ifdef WITH_GUI
 #include "GUI/editor_pane.h"
+#if !_WIN32
 #include <gdk/gdkx.h>
-#if __x86_64__
+#endif
+#if __x86_64__ && !_WIN32
 #include <sys/mman.h>
 #include <sys/user.h>
 #endif
@@ -129,13 +131,16 @@ static void on_adjustment_value_changed(GtkAdjustment *adjustment, AEffect *effe
 
 void modal_midi_learn(Param param_index) {}
 
+#if !_WIN32
 static void XEventProc(XEvent *xevent)
 {
 	xevent->xany.display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
 	XPutBackEvent(xevent->xany.display, xevent);
 	gtk_main_iteration();
 }
+#endif
 
+#if !_WIN32
 static void setEventProc(Display *display, Window window)
 {
 #if __x86_64__
@@ -171,6 +176,7 @@ static void setEventProc(Display *display, Window window)
 	}
 
 	long temp[2] = {(long)ptr, 0};
+
 	Atom atom = XInternAtom(display, "_XEventProc", false);
 	XChangeProperty(display, window, atom, atom, 32, PropModeReplace, (unsigned char *)temp, 2);
 #else
@@ -179,6 +185,7 @@ static void setEventProc(Display *display, Window window)
 	XChangeProperty(display, window, atom, atom, 32, PropModeReplace, (unsigned char *)temp, 1);
 #endif
 }
+#endif
 
 #if DEBUG
 static void gdk_event_handler(GdkEvent *event, gpointer	data)
@@ -325,6 +332,7 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			// on some hosts (e.g. energyXT) creating the gdk window can fail unless we call gdk_display_sync
 			gdk_display_sync(gdk_display_get_default());
 
+#if !_WIN32
 			plugin->gdkParentWindow = gdk_x11_window_foreign_new_for_display(gdk_display_get_default(), (GdkNativeWindow)(uintptr_t)ptr); //gdk_window_foreign_new((GdkNativeWindow)(uintptr_t)ptr);
 			g_assert(plugin->gdkParentWindow);
 
@@ -334,7 +342,7 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			Display *xdisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
 			Window xwindow = GDK_WINDOW_XWINDOW(gtk_widget_get_window(plugin->gtkWindow));
 			setEventProc(xdisplay, xwindow);
-
+#endif
 			gtk_container_add(GTK_CONTAINER(plugin->gtkWindow), plugin->editorWidget);
 			gtk_widget_show_all(plugin->gtkWindow);
 
@@ -380,11 +388,15 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 		case effProcessEvents: {
 			VstEvents *events = (VstEvents *)ptr;
 
+#if _WIN32		// Do not assert on Windows
+			plugin->midiEvents.empty();
+#else
 			assert(plugin->midiEvents.empty());
+#endif
 
 			memset(plugin->midiBuffer, 0, 4096);
 			unsigned char *buffer = plugin->midiBuffer;
-			
+
 			for (int32_t i=0; i<events->numEvents; i++) {
 				VstMidiEvent *event = (VstMidiEvent *)events->events[i];
 				if (event->type != kVstMidiType) {
@@ -543,12 +555,16 @@ AEffect * VSTPluginMain(audioMasterCallback audioMaster)
 	effect->numOutputs = 2;
 	effect->flags = effFlagsCanReplacing | effFlagsIsSynth | effFlagsProgramChunks;
 #ifdef WITH_GUI
+#if _WIN32
+	effect->flags |= effFlagsHasEditor;		// On Windows, amsynth's GTK GUI works in REAPER! (^.^)
+#else
 	if (strcmp("REAPER", hostProductString) == 0) {
 		// amsynth's GTK GUI doesn't work in REAPER :-[
 	} else {
 		effect->flags |= effFlagsHasEditor;
 	}
-#endif
+#endif // _WIN32
+#endif // WITH_GUI
 	// Do no use the ->user pointer because ardour clobbers it
 	effect->ptr3 = new Plugin(audioMaster);
 	effect->uniqueID = CCONST('a', 'm', 's', 'y');

@@ -29,10 +29,15 @@
 #include "bitmap_popup.h"
 #include "editor_menus.h"
 
+#if _WIN32
+#include <direct.h>
+#include <string.h>
+#else
 #include <gdk/gdkx.h>
 #include <string.h>
 #include <X11/Xlib.h>
 #include <X11/Xmd.h>
+#endif
 
 //#define ENABLE_LAYOUT_EDIT 1
 
@@ -97,7 +102,11 @@ static gchar *
 extract_skin (char *skin_file)
 {
 	gchar *tempdir = g_strconcat(g_get_tmp_dir(), "/amsynth.skin.XXXXXXXX", NULL);
+#if _WIN32
+	if (_mkdir(tempdir)) {
+#else
 	if (!mkdtemp(tempdir)) {
+#endif
 		g_message("Failed to create temporary directory. Unable to load skin.");
 		g_free(tempdir);
 		return NULL;
@@ -233,6 +242,7 @@ button_release_event (GtkWidget *widget, GdkEventButton *event, GtkWidget *prese
 #define KEY_CONTROL_PARAM_NAME	"param_name"
 #define KEY_CONTROL_PARAM_NUM	"param_num"
 
+#if !_WIN32
 static int get_xsettings_gdk_window_scaling_factor ()
 {
 	// GTK doesn't expose an API to its XSettingsClient, so we have to use the X11 APIs
@@ -319,6 +329,7 @@ static int get_scaling_factor ()
 	
 	return 1;
 }
+#endif
 
 GtkWidget *
 editor_pane_new (void *synthesizer, GtkAdjustment **adjustments, gboolean is_plugin, int scaling_factor)
@@ -342,11 +353,13 @@ editor_pane_new (void *synthesizer, GtkAdjustment **adjustments, gboolean is_plu
 
 	g_is_plugin = is_plugin;
 
+#if !_WIN32
 	if (scaling_factor > 0) {
 		editor_scaling_factor = scaling_factor;
 	} else {
 		editor_scaling_factor = get_scaling_factor ();
 	}
+#endif
 
 	GtkWidget *fixed = gtk_fixed_new ();
 	gtk_widget_set_size_request (fixed, 400, 300);

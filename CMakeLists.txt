@@ -291,6 +291,11 @@ if (CONFIG_VST)
         target_link_libraries (${PROJECT_NAME}_vst PRIVATE ${GTK2_LIBRARIES})
     endif ()
 
+    # Disable "cast from 'gpointer' {aka 'void*'} to 'long int' loses precision" warning on Windows
+    if (WIN32)
+        target_compile_options (${PROJECT_NAME}_vst PRIVATE -fpermissive)
+    endif ()
+
     # Must export VST main entry, or hosts won't recognize
     if (NOT WIN32)
         target_link_options (${PROJECT_NAME}_vst PUBLIC "-exported_symbol-regex \"VSTPluginMain|main\"")
