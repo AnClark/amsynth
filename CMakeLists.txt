@@ -12,6 +12,7 @@ option (CONFIG_VST "Enable VST support" ON)
 if (NOT WIN32)      # On Windows I prefer VST
     option (CONFIG_LV2 "Enable LV2 support" ON)
 endif ()
+option (CONFIG_VST_IMGUI "Enable Dear ImGui editor for VST (experimental, EARLY ALPHA)" ON)
 
 if (UNIX AND NOT APPLE)
     option (CONFIG_STANDALONE "Enable standalone support (Unix only)" ON)
@@ -296,6 +297,26 @@ if (CONFIG_VST)
 
 endif ()
 
+if (CONFIG_VST_IMGUI)
+    add_library (${PROJECT_NAME}_vst_imgui SHARED
+        src/amsynth_vst_imgui.cpp
+        vendor/vestige/aeffectx.h
+        # TODO: ImGui / GLFW related src files
+    )
+    target_link_libraries (${PROJECT_NAME}_vst_imgui PRIVATE
+        ${PROJECT_NAME}_core
+    )
+
+    # Disable "cast from 'gpointer' {aka 'void*'} to 'long int' loses precision" warning on Windows
+    if (WIN32)
+        target_compile_options (${PROJECT_NAME}_vst PRIVATE -fpermissive)
+    endif ()
+
+    # Must export VST main entry, or hosts won't recognize
+    if (NOT WIN32)
+        target_link_options (${PROJECT_NAME}_vst PUBLIC "-exported_symbol-regex \"VSTPluginMain|main\"")
+    endif ()
+endif ()
 
 #
 # LV2 Support

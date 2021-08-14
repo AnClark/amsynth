@@ -1,0 +1,8 @@
+
+class ImguiEditor
+{
+public:
+
+private:
+
+};
