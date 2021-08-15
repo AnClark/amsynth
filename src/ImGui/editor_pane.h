@@ -1,8 +1,41 @@
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl2.h>
+#include <stdio.h>
+#ifdef __APPLE__
+#define GL_SILENCE_DEPRECATION
+#endif
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
+/** Prefer WINAPI on Windows to reduce dependencies */
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <windows.h>
 
 class ImguiEditor
 {
 public:
+    ImguiEditor(void *parentId);
+    ~ImguiEditor();
+
+    void openEditor();
+    void closeEditor();
 
 private:
+    GLFWwindow *window;
+    void *parentId;
 
+    void _setupGLFW();
+    void _setupImGui();
+    void _drawLoop();
+
+    // Our state
+    bool shouldEditorOn = false;
+    bool show_demo_window = true;
+    bool show_another_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    std::thread editorThread;
 };
