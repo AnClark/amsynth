@@ -35,6 +35,8 @@
 
 #include <vestige/aeffectx.h>
 
+#include <windows.h>
+
 // from http://www.asseca.org/vst-24-specs/index.html
 #define effGetParamLabel        6
 #define effGetParamDisplay      7
@@ -170,26 +172,32 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 
 #ifdef WITH_GUI
 		case effEditGetRect: {
-			static ERect rect = {0, 0, 400, 600};
+			static ERect rect = {0, 0, 720, 1280};
 			ERect **er = (ERect **)ptr;
 			*er = &rect;
 			return 1;
 		}
 		case effEditOpen: {
-			static bool initialized = false;
-			if (!initialized) {
+			//MessageBoxA(NULL, "effEditOpen start", "Info", MB_OK);
 
-				plugin->editorInstance = new ImguiEditor;
-
-				initialized = true;
+			if (!plugin->editorInstance) {
+				plugin->editorInstance = new ImguiEditor(ptr);
+				plugin->editorInstance->openEditor();
 			}
 
+			//MessageBoxA(NULL, "effEditOpen finish", "Info", MB_OK);
 			return 1;
 		}
 		case effEditClose: {
-			delete plugin->editorInstance;
-			plugin->editorInstance = nullptr;
+			//MessageBoxA(NULL, "effEditClose start", "Info", MB_OK);
 
+			if (plugin->editorInstance) {
+				plugin->editorInstance->closeEditor();
+				delete plugin->editorInstance;
+				plugin->editorInstance = nullptr;
+			}
+
+			//MessageBoxA(NULL, "effEditClose finish", "Info", MB_OK);
 			return 0;
 		}
 		case effEditIdle: {
@@ -264,7 +272,7 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 		case effGetPlugCategory:
 			return kPlugCategSynth;
 		case effGetEffectName:
-			strcpy((char *)ptr, "amsynth");
+			strcpy((char *)ptr, "amsynth with ImGui");
 			return 1;
 		case effGetVendorString:
 			strcpy((char *)ptr, "Nick Dowell");
