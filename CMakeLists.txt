@@ -334,11 +334,15 @@ if (CONFIG_VST_IMGUI)
     )
     if (WIN32)
         target_compile_definitions (${PROJECT_NAME}_vst_imgui PRIVATE GLFW_EXPOSE_NATIVE_WIN32=1)
+        set (OPENGL_LIBRARIES -lopengl32)       # Must link against opengl32 to avoid link error
+    else ()
+        target_compile_definitions (${PROJECT_NAME}_vst_imgui PRIVATE GLFW_EXPOSE_NATIVE_X11=1)
+        set (OPENGL_LIBRARIES -lGL)
     endif ()
     target_link_libraries (${PROJECT_NAME}_vst_imgui PRIVATE
         ${PROJECT_NAME}_core
         ${GLFW_LIBRARIES}
-        -lopengl32
+        ${OPENGL_LIBRARIES}
         #imgui
     )
 
