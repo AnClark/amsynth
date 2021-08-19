@@ -63,3 +63,4 @@ man/*/amsynth.1
 pkg/**
 tmp/**
 *.tar.*
+.vscode
