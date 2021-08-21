@@ -1,6 +1,7 @@
 #include "editor_pane.h"
 
-thread_local ImGuiContext* myImGuiContext;
+thread_local ImGuiContext *myImGuiContext;
+std::mutex ImguiEditor::_init_lock;
 
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -112,7 +113,7 @@ void ImguiEditor::_setupImGui()
 void ImguiEditor::_drawLoop()
 {
     {
-       // std::scoped_lock<std::mutex> lock(_init_lock);
+        std::scoped_lock<std::mutex> lock(_init_lock);
         _setupGLFW();
         _setupImGui();
     }

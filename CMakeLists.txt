@@ -332,6 +332,10 @@ if (CONFIG_VST_IMGUI)
         ${CMAKE_SOURCE_DIR}/vendor
         ${IMGUI_DIR}
     )
+
+    # Scope lock requires C++17
+    target_compile_options (${PROJECT_NAME}_vst_imgui PRIVATE -std=c++17)
+
     if (WIN32)
         target_compile_definitions (${PROJECT_NAME}_vst_imgui PRIVATE GLFW_EXPOSE_NATIVE_WIN32=1)
         set (OPENGL_LIBRARIES -lopengl32)       # Must link against opengl32 to avoid link error
