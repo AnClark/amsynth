@@ -178,26 +178,18 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			return 1;
 		}
 		case effEditOpen: {
-			//MessageBoxA(NULL, "effEditOpen start", "Info", MB_OK);
-
 			if (!plugin->editorInstance) {
-				plugin->editorInstance = new ImguiEditor(ptr);
+				plugin->editorInstance = new ImguiEditor(ptr, 1280, 720);
 				plugin->editorInstance->openEditor();
 			}
-
-			//MessageBoxA(NULL, "effEditOpen finish", "Info", MB_OK);
 			return 1;
 		}
 		case effEditClose: {
-			//MessageBoxA(NULL, "effEditClose start", "Info", MB_OK);
-
 			if (plugin->editorInstance) {
 				plugin->editorInstance->closeEditor();
 				delete plugin->editorInstance;
 				plugin->editorInstance = nullptr;
 			}
-
-			//MessageBoxA(NULL, "effEditClose finish", "Info", MB_OK);
 			return 0;
 		}
 		case effEditIdle: {
