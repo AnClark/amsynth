@@ -5,8 +5,10 @@
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #endif
+
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+
 
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
@@ -17,7 +19,7 @@
 class ImguiEditor
 {
 public:
-    ImguiEditor(void *parentId);
+    ImguiEditor(void *parentId, int width, int height);
     ~ImguiEditor();
 
     void openEditor();
@@ -36,6 +38,9 @@ private:
     bool show_demo_window = true;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    int width = 800;
+    int height = 480;
 
     std::thread editorThread;
     static std::mutex _init_lock;

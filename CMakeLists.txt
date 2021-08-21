@@ -102,11 +102,6 @@ if (CONFIG_LV2)
     pkg_check_modules (LV2 REQUIRED lv2)
 endif ()
 
-# Check for GLFW (ImGui's backend I've chosen)
-if (CONFIG_VST_IMGUI)
-    pkg_check_modules (GLFW REQUIRED glfw3)
-endif ()
-
 # Common include directories
 include_directories (
     vendor
@@ -115,6 +110,19 @@ include_directories (
 
 # Enable -fPIC to let static library link properly
 add_compile_options (-fPIC)
+
+
+#
+# Build my own GLFW
+#
+set(BUILD_SHARED_LIBS       OFF CACHE BOOL "")
+set(GLFW_BUILD_EXAMPLES     OFF CACHE BOOL "")
+set(GLFW_BUILD_TESTS        OFF CACHE BOOL "")
+set(GLFW_BUILD_DOCS         OFF CACHE BOOL "")
+set(GLFW_INSTALL            OFF CACHE BOOL "")
+set(GLFW_THREAD_LOCAL_DATA  ON  CACHE BOOL "")
+set(GLFW_VULKAN_STATIC      OFF CACHE BOOL "")
+add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/glfw)
 
 
 #
@@ -345,7 +353,7 @@ if (CONFIG_VST_IMGUI)
     endif ()
     target_link_libraries (${PROJECT_NAME}_vst_imgui PRIVATE
         ${PROJECT_NAME}_core
-        ${GLFW_LIBRARIES}
+        glfw
         ${OPENGL_LIBRARIES}
         #imgui
     )

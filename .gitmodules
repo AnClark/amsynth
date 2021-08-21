@@ -1,6 +1,6 @@
-[submodule "vendor/dpf"]
-	path = vendor/dpf
-	url = git://github.com/distrho/dpf.git
 [submodule "vendor/imgui"]
 	path = vendor/imgui
 	url = git://github.com/ocornut/imgui
+[submodule "vendor/glfw"]
+	path = vendor/glfw
+	url = git://github.com/anclark/glfw.git
