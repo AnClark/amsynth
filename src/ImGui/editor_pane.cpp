@@ -210,7 +210,13 @@ void ImguiEditor::openEditor()
     shouldEditorOn = true;
     //_drawLoop();
 
-    editorThread = std::thread(_drawLoop, this);
+    /**
+     * Create thread for editor.
+     * Actually, a non-static member can also be a thread function,
+     * but you need to use operator "&".
+     * Omitting "&" is OK on Msys2 MinGW-w64, but won't allowed on Linux.
+     */
+    editorThread = std::thread(&ImguiEditor::_drawLoop, this);
 }
 
 void ImguiEditor::closeEditor()
