@@ -4,20 +4,17 @@ thread_local ImGuiContext *myImGuiContext;
 std::mutex ImguiEditor::_init_lock;
 
 #ifdef _WIN32
-#define GLFW_EXPOSE_NATIVE_WIN32
-void reparent_window(GLFWwindow *window, void *host_window)
+
+/**
+ * Set / reset window's parent on Windows.
+ * I handle these two functions with my modded GLFW (https://github.com/anclark/GLFW)
+ */
+void reparent_window([[maybe_unused]] GLFWwindow *window, void *host_window)
 {
-    HWND hwnd = glfwGetWin32Window(window);
-    if (SetParent(hwnd, reinterpret_cast<HWND>(host_window)) == nullptr)
-    {
-        //MessageBoxA(NULL, GetLastError(), "Info", MB_OK);
-    }
 }
 
-void reparent_window_to_root(GLFWwindow *window)
+void reparent_window_to_root([[maybe_unused]] GLFWwindow *window)
 {
-    HWND hWnd = glfwGetWin32Window(window);
-    SetParent(hWnd, nullptr);
 }
 #else
 void reparent_window(GLFWwindow *window, void *host_window)
@@ -41,9 +38,11 @@ static void glfw_error_callback(int error, const char *description)
     MessageBoxA(NULL, (LPCSTR)description, "Error", MB_OK);
 }
 
-ImguiEditor::ImguiEditor(void *parentId)
+ImguiEditor::ImguiEditor(void *parentId, int width, int height)
 {
     this->parentId = parentId;
+    this->width = width;
+    this->height = height;
 }
 
 ImguiEditor::~ImguiEditor()
@@ -59,16 +58,27 @@ void ImguiEditor::_setupGLFW()
     if (!glfwInit())
         return;
 
+    // Omit explicit version specification to let GLFW guess GL version,
+    // or GLFW will fail to load on old environments with GL 2.x
+#if 0
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);     // Do not allow resizing
-    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);     // Disable decoration. Or you will see a weird titlebar :-)
+#endif
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // Do not allow resizing
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // Disable decoration. Or you will see a weird titlebar :-)
 
-    window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL2 example", NULL, NULL);    // This size is only the standalone window's size, NOT editor's size
+    // Enable embedded window
+    glfwWindowHint(GLFW_EMBEDDED_WINDOW, GLFW_TRUE);
+    glfwWindowHintVoid(GLFW_PARENT_WINDOW_ID, this->parentId);
+
+    window = glfwCreateWindow(this->width, this->height, "Dear ImGui GLFW+OpenGL2 example", NULL, NULL); // This size is only the standalone window's size, NOT editor's size
     if (window == NULL)
         return;
 
+    // Embed editor to host
+    // On Windows, there's an implementation within my modded GLFW.
     reparent_window(window, this->parentId);
+
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 }
@@ -86,8 +96,8 @@ void ImguiEditor::_setupImGui()
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Set actual editor UI size here
-    io.DisplaySize.x = 1280.0f;
-    io.DisplaySize.y = 720.0f;
+    io.DisplaySize.x = (float)this->width;
+    io.DisplaySize.y = (float)this->height;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -174,12 +184,12 @@ void ImguiEditor::_drawLoop()
 
         // Rendering
         ImGui::Render();
-        //int display_w, display_h;
-        //glfwGetFramebufferSize(window, &display_w, &display_h);
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
 
-        ImGuiIO &io = ImGui::GetIO();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        //glViewport(0, 0, 1280, 720);
+        //ImGuiIO &io = ImGui::GetIO();
+        //glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -195,6 +205,10 @@ void ImguiEditor::_drawLoop()
         glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
     }
+
+    // Remember to detach window, or host will freeze!
+    // Also handled within GLFW on Windows.
+    reparent_window_to_root(window);
 
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
