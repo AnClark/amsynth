@@ -8,14 +8,14 @@ project(amsynth
 )
 
 option (CONFIG_GUI "Enable GUI support" ON)
-option (CONFIG_VST "Enable VST support" ON)
+option (CONFIG_VST "Enable VST support" OFF)
 if (NOT WIN32)      # On Windows I prefer VST
-    option (CONFIG_LV2 "Enable LV2 support" ON)
+    option (CONFIG_LV2 "Enable LV2 support" OFF)
 endif ()
 option (CONFIG_VST_IMGUI "Enable Dear ImGui editor for VST (experimental, EARLY ALPHA)" ON)
 
 if (UNIX AND NOT APPLE)
-    option (CONFIG_STANDALONE "Enable standalone support (Unix only)" ON)
+    option (CONFIG_STANDALONE "Enable standalone support (Unix only)" OFF)
     option (CONFIG_ALSA "Build support for ALSA" ON)
     option (CONFIG_JACK "Build suppoirt for Jack Audio Connection Kit" ON)
     option (CONFIG_LASH "Build support for LASH" OFF)
