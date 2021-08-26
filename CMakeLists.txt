@@ -80,9 +80,12 @@ endif ()
 find_package (PkgConfig REQUIRED)
 
 # Check for GTK2
+# This is necessary for GTK-based GUI, but not for ImGui.
 # Reference: https://www.cnblogs.com/zjutzz/p/10959211.html
 if (CONFIG_GUI)
-    pkg_check_modules (GTK2 REQUIRED gtk+-2.0)
+    if (CONFIG_VST OR CONFIG_LV2)
+        pkg_check_modules (GTK2 REQUIRED gtk+-2.0)
+    endif ()
 endif ()
 
 # Check for Unix-specific libraries
