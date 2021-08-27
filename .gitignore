@@ -64,3 +64,4 @@ pkg/**
 tmp/**
 *.tar.*
 .vscode
+.backup
