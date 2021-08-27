@@ -35,7 +35,9 @@ void reparent_window_to_root([[maybe_unused]] GLFWwindow *window) {}
 static void glfw_error_callback(int error, const char *description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+#if _WIN32
     MessageBoxA(NULL, (LPCSTR)description, "Error", MB_OK);
+#endif
 }
 
 ImguiEditor::ImguiEditor(void *parentId, int width, int height)
