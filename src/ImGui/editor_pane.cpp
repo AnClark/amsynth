@@ -17,17 +17,11 @@ void reparent_window_to_root([[maybe_unused]] GLFWwindow *window)
 {
 }
 #else
-void reparent_window(GLFWwindow *window, void *host_window)
-{
-    Window host_x11_win = reinterpret_cast<Window>(host_window);
-    auto display = glfwGetX11Display();
-    auto glfw_x11_win = glfwGetX11Window(window);
-
-    XReparentWindow(display, glfw_x11_win, host_x11_win, 0, 0); // h_offset);
-    glfwFocusWindow(window);
-    XRaiseWindow(display, glfw_x11_win);
-    XSync(display, true);
-}
+/**
+ * Set / reset window's parent on Linux.
+ * I handle these two functions with my modded GLFW (https://github.com/anclark/GLFW)
+ */
+void reparent_window([[maybe_unused]] GLFWwindow *window, void *host_window) {}
 
 void reparent_window_to_root([[maybe_unused]] GLFWwindow *window) {}
 #endif
@@ -78,7 +72,8 @@ void ImguiEditor::_setupGLFW()
         return;
 
     // Embed editor to host
-    // On Windows, there's an implementation within my modded GLFW.
+    // On both Windows and Linux, there's an implementation within my modded GLFW.
+    // So they are empty functions now.
     reparent_window(window, this->parentId);
 
     glfwMakeContextCurrent(window);
@@ -239,7 +234,10 @@ void ImguiEditor::closeEditor()
 {
     if (shouldEditorOn)
     {
+        // Reparent window to root to avoid possible crashes
+        // Now this function is also handled within my modded GLFW.
         //reparent_window_to_root(window);
+
         shouldEditorOn = false;
         if (editorThread.joinable())
             editorThread.join();
