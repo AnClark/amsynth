@@ -14,7 +14,11 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
+#if _WIN32
 #include <windows.h>
+#else
+#include <X11/Xlib.h>
+#endif
 
 class ImguiEditor
 {
