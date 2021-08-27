@@ -28,24 +28,21 @@ public:
 
     void openEditor();
     void closeEditor();
+    void drawFrame();
 
 private:
     GLFWwindow *window;
+    ImGuiContext *myImGuiContext = nullptr;
     void *parentId;
 
     void _setupGLFW();
     void _setupImGui();
-    void _drawLoop();
 
     // Our state
-    bool shouldEditorOn = false;
     bool show_demo_window = true;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     int width = 800;
     int height = 480;
-
-    std::thread editorThread;
-    static std::mutex _init_lock;
 };
