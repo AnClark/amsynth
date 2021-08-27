@@ -195,8 +195,11 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			return 0;
 		}
 		case effEditIdle: {
-
-			return 0;
+			// Draw UI on every idle piece
+			if (plugin->editorInstance) {
+				plugin->editorInstance->drawFrame();
+			}
+			return 1;
 		}
 #endif
 

@@ -1,7 +1,6 @@
 #include "editor_pane.h"
 
-thread_local ImGuiContext *myImGuiContext;
-std::mutex ImguiEditor::_init_lock;
+static int glfw_initialized_cnt;
 
 #ifdef _WIN32
 
@@ -49,10 +48,20 @@ ImguiEditor::~ImguiEditor()
 
 void ImguiEditor::_setupGLFW()
 {
-    // Setup window
-    glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit())
-        return;
+    /**
+     * Setup window as well as initialized count.
+     * Here I manage a reference count of UI instances and keep glfw initialized
+     * when you have multiple instances open
+     *
+     * This is Justin Frankel's implementation. Noizebox also has this feature
+     * included in his modded GLFW (from which I forked)
+     */
+    if (!glfw_initialized_cnt++)
+    {
+        glfwSetErrorCallback(glfw_error_callback);
+        if (!glfwInit())
+            return;
+    }
 
     // Omit explicit version specification to let GLFW guess GL version,
     // or GLFW will fail to load on old environments with GL 2.x
@@ -117,16 +126,9 @@ void ImguiEditor::_setupImGui()
     //IM_ASSERT(font != NULL);
 }
 
-void ImguiEditor::_drawLoop()
+void ImguiEditor::drawFrame()
 {
-    {
-        std::scoped_lock<std::mutex> lock(_init_lock);
-        _setupGLFW();
-        _setupImGui();
-    }
-
-    // Main loop
-    while (!glfwWindowShouldClose(window) && shouldEditorOn)
+    // Called once per idle slice
     {
         ImGui::SetCurrentContext(myImGuiContext);
 
@@ -202,44 +204,26 @@ void ImguiEditor::_drawLoop()
         glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
     }
-
-    // Remember to detach window, or host will freeze!
-    // Also handled within GLFW on Windows.
-    reparent_window_to_root(window);
-
-    // Cleanup
-    ImGui_ImplOpenGL2_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext(myImGuiContext);
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
 }
 
 void ImguiEditor::openEditor()
 {
-    shouldEditorOn = true;
-    //_drawLoop();
-
-    /**
-     * Create thread for editor.
-     * Actually, a non-static member can also be a thread function,
-     * but you need to use operator "&".
-     * Omitting "&" is OK on Msys2 MinGW-w64, but won't allowed on Linux.
-     */
-    editorThread = std::thread(&ImguiEditor::_drawLoop, this);
+    _setupGLFW();
+    _setupImGui();
 }
 
 void ImguiEditor::closeEditor()
 {
-    if (shouldEditorOn)
+    if (myImGuiContext)
     {
-        // Reparent window to root to avoid possible crashes
-        // Now this function is also handled within my modded GLFW.
-        //reparent_window_to_root(window);
+        // Cleanup
+        ImGui_ImplOpenGL2_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext(myImGuiContext);
+        myImGuiContext = nullptr;
 
-        shouldEditorOn = false;
-        if (editorThread.joinable())
-            editorThread.join();
+        glfwDestroyWindow(window);
+        if (!--glfw_initialized_cnt)
+            glfwTerminate();
     }
 }
