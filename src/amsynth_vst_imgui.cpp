@@ -35,7 +35,9 @@
 
 #include <vestige/aeffectx.h>
 
+#if _WIN32
 #include <windows.h>
+#endif
 
 // from http://www.asseca.org/vst-24-specs/index.html
 #define effGetParamLabel        6
