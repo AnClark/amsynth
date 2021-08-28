@@ -2,6 +2,7 @@
 
 thread_local ImGuiContext *myImGuiContext;
 std::mutex ImguiEditor::_init_lock;
+std::atomic<int> ImguiEditor::instance_counter = 0;
 
 #ifdef _WIN32
 
@@ -49,10 +50,21 @@ ImguiEditor::~ImguiEditor()
 
 void ImguiEditor::_setupGLFW()
 {
-    // Setup window
-    glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit())
-        return;
+    /* Belt and braces! This refcount is mostly for the imgui-glfw backend.
+     * The refcounted initialization in the included glfw fork is useful
+     * when there are multiple plugins (not just multiple instances) using
+     * vstimgui */
+    auto inst_no = instance_counter.fetch_add(1);
+    if (inst_no == 0)
+    {
+        glfwSetErrorCallback(glfw_error_callback);
+        if (!glfwInit())
+        {
+            return;
+        }
+        /* Until this feature is done in glfw https://github.com/glfw/glfw/issues/25
+         * Open a glfw window and set it's native window a child of the host provided window */
+    }
 
     // Omit explicit version specification to let GLFW guess GL version,
     // or GLFW will fail to load on old environments with GL 2.x
@@ -213,7 +225,12 @@ void ImguiEditor::_drawLoop()
     ImGui::DestroyContext(myImGuiContext);
 
     glfwDestroyWindow(window);
-    glfwTerminate();
+
+    auto inst_no = instance_counter.fetch_add(-1);
+    if (inst_no <= 1)
+    {
+        glfwTerminate();
+    }
 }
 
 void ImguiEditor::openEditor()

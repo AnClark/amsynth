@@ -36,6 +36,7 @@ private:
     void _setupGLFW();
     void _setupImGui();
     void _drawLoop();
+    static std::atomic<int> instance_counter;
 
     // Our state
     bool shouldEditorOn = false;
