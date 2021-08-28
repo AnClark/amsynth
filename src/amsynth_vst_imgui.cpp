@@ -39,6 +39,10 @@
 #include <windows.h>
 #endif
 
+/** Default UI size */
+const int WINDOW_WIDTH = 1024;
+const int WINDOW_HEIGHT = 768;
+
 // from http://www.asseca.org/vst-24-specs/index.html
 #define effGetParamLabel        6
 #define effGetParamDisplay      7
@@ -174,14 +178,14 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 
 #ifdef WITH_GUI
 		case effEditGetRect: {
-			static ERect rect = {0, 0, 720, 1280};
+			static ERect rect = {0, 0, WINDOW_HEIGHT, WINDOW_WIDTH};
 			ERect **er = (ERect **)ptr;
 			*er = &rect;
 			return 1;
 		}
 		case effEditOpen: {
 			if (!plugin->editorInstance) {
-				plugin->editorInstance = new ImguiEditor(ptr, 1280, 720);
+				plugin->editorInstance = new ImguiEditor(ptr, WINDOW_WIDTH, WINDOW_HEIGHT);
 				plugin->editorInstance->openEditor();
 			}
 			return 1;
