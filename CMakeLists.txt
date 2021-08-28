@@ -14,6 +14,10 @@ if (NOT WIN32)      # On Windows I prefer VST
 endif ()
 option (CONFIG_VST_IMGUI "Enable Dear ImGui editor for VST (experimental, EARLY ALPHA)" ON)
 
+# Options for ImGui embedded fonts
+set (INCLUDED_FONT ${CMAKE_SOURCE_DIR}/vendor/imgui/misc/fonts/Roboto-Medium.ttf CACHE STRING "Path to font file to include in build")
+set (GENERATED_FONT_DIR ${CMAKE_BINARY_DIR}/generated_font)
+
 if (UNIX AND NOT APPLE)
     option (CONFIG_STANDALONE "Enable standalone support (Unix only)" OFF)
     option (CONFIG_ALSA "Build support for ALSA" ON)
@@ -126,6 +130,21 @@ set(GLFW_INSTALL            OFF CACHE BOOL "")
 set(GLFW_THREAD_LOCAL_DATA  ON  CACHE BOOL "")
 set(GLFW_VULKAN_STATIC      OFF CACHE BOOL "")
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/glfw)
+
+
+#
+# Build embedded ImGui fonts
+#
+
+# The font used is compiled into the binary itself using the ImGui
+# supplied tool to convert it to a header file.
+file (MAKE_DIRECTORY ${GENERATED_FONT_DIR})
+add_executable (binary_to_compressed EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/vendor/imgui/misc/fonts/binary_to_compressed_c.cpp)
+add_custom_command (OUTPUT ${GENERATED_FONT_DIR}/font.h
+                    COMMAND ./binary_to_compressed "${INCLUDED_FONT}" font > "${GENERATED_FONT_DIR}/font.h"
+                    DEPENDS binary_to_compressed VERBATIM)
+
+add_custom_target (generate_font DEPENDS ${GENERATED_FONT_DIR}/font.h)
 
 
 #
@@ -342,7 +361,9 @@ if (CONFIG_VST_IMGUI)
     target_include_directories (${PROJECT_NAME}_vst_imgui PRIVATE
         ${CMAKE_SOURCE_DIR}/vendor
         ${IMGUI_DIR}
+        ${GENERATED_FONT_DIR}
     )
+    add_dependencies (${PROJECT_NAME}_vst_imgui generate_font)
 
     # Scope lock requires C++17
     target_compile_options (${PROJECT_NAME}_vst_imgui PRIVATE -std=c++17)
