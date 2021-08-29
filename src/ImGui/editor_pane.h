@@ -20,15 +20,25 @@
 #include <X11/Xlib.h>
 #endif
 
+/** Communicate with DSP part */
+#include <vestige/aeffectx.h>
+#include "../Preset.h"
+#include "../PresetController.h"
+#include "../Synthesizer.h"
+
+typedef void (*ParamChangeCallback) (float[], AEffect *);
+
 class ImguiEditor
 {
 public:
-    ImguiEditor(void *parentId, int width, int height);
+    ImguiEditor(void *parentId, int width, int height, Synthesizer *synthInstance);
     ~ImguiEditor();
 
     void openEditor();
     void closeEditor();
     void drawFrame();
+
+    void setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance);
 
 private:
     GLFWwindow *window;
@@ -39,10 +49,18 @@ private:
     void _setupImGui();
 
     // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     int width = 800;
     int height = 480;
+
+    // Communicate with host
+    AEffect *effInstance;
+    Synthesizer *synthInstance;
+    float paramList[kAmsynthParameterCount];
+    char *paramNameList[kAmsynthParameterCount];
+    ParamChangeCallback _onParamChange;
+
+    void _getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size);
+    void _getParamValues();
 };

@@ -26,6 +26,35 @@ void reparent_window([[maybe_unused]] GLFWwindow *window, void *host_window) {}
 void reparent_window_to_root([[maybe_unused]] GLFWwindow *window) {}
 #endif
 
+void ImguiEditor::_getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size)
+{
+    Preset preset;
+    Parameter &parameter = preset.getParameter(parameter_index);
+
+    if (minimum)
+        *minimum = parameter.getMin();
+
+    if (maximum)
+        *maximum = parameter.getMax();
+
+    if (default_value)
+        *default_value = parameter.getValue();
+
+    if (step_size)
+        *step_size = parameter.getStep();
+}
+
+void ImguiEditor::_getParamValues()
+{
+    for (int i = 0; i < kAmsynthParameterCount; i++)
+    {
+        paramList[i] = (float)synthInstance->getParameterValue((Param)i);
+
+        paramNameList[i] = (char *)malloc(sizeof(char *) * 32);
+        synthInstance->getParameterName((Param)i, paramNameList[i], 32);
+    }
+}
+
 static void glfw_error_callback(int error, const char *description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -34,17 +63,24 @@ static void glfw_error_callback(int error, const char *description)
 #endif
 }
 
-ImguiEditor::ImguiEditor(void *parentId, int width, int height)
+ImguiEditor::ImguiEditor(void *parentId, int width, int height, Synthesizer *synthInstance)
 {
     this->parentId = parentId;
     this->width = width;
     this->height = height;
+    this->synthInstance = synthInstance;
 }
 
 ImguiEditor::~ImguiEditor()
 {
     // Re-call closeEditor() in case user forget to call it
     closeEditor();
+}
+
+void ImguiEditor::setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance)
+{
+    this->_onParamChange = func;
+    this->effInstance = effInstance;
 }
 
 void ImguiEditor::_setupGLFW()
@@ -124,6 +160,9 @@ void ImguiEditor::_setupImGui()
 
 void ImguiEditor::drawFrame()
 {
+    // Get current parameter names and values
+    _getParamValues();
+
     // Called once per idle slice
     {
         ImGui::SetCurrentContext(myImGuiContext);
@@ -140,40 +179,33 @@ void ImguiEditor::drawFrame()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+        // 1. Show a window listing all those possible parameters
         {
-            static float f = 0.0f;
-            static int counter = 0;
+            ImGui::Begin("Hello, Amsynth! - Parameter summary");
 
-            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+            for (int i = 0; i < kAmsynthParameterCount; i++)
+            {
+                ImGui::Text("[%s]: %f", paramNameList[i], paramList[i]);
+            }
 
-            ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
 
-        // 3. Show another simple window.
-        if (show_another_window)
+        // 2. Show a window with siiders controlling all those parameters
         {
-            ImGui::Begin("Another Window", &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
+            ImGui::Begin("Hello, Amsynth! - Simple parameter controller");
+
+            for (int i = 0; i < kAmsynthParameterCount; i++)
+            {
+                double lower = 0, upper = 0, step_increment = 0; // NOTICE: step_increment is not supported by ImGui
+                _getParamProperties(i, &lower, &upper, nullptr, &step_increment);
+
+                if (ImGui::SliderFloat(paramNameList[i], &paramList[i], (float)lower, (float)upper))
+                {
+                    _onParamChange(paramList, effInstance);
+                }
+            }
+
             ImGui::End();
         }
 
