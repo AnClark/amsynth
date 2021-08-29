@@ -209,6 +209,65 @@ void ImguiEditor::drawFrame()
             ImGui::End();
         }
 
+        // 3. Show a window listing all the presets
+        {
+            ImGui::Begin("Hello Amsynth! - Preset list");
+
+            for (auto &bank : PresetController::getPresetBanks())
+            {
+                char text[64]; // Buffer
+
+                /**
+                 * a. Create root nodes for each bank 
+                 */
+                snprintf(text, sizeof(text), "[%s] %s", bank.read_only ? _("F") : _("U"), bank.name.c_str());
+                if (ImGui::TreeNode(text))
+                {
+                    /**
+                     * b. Create child nodes for each preset item 
+                     *    Each bank has up to 127 presets, accessed by index.
+                     */
+                    static int selected = -1; // Current selection's index
+
+                    PresetController presetController;
+                    presetController.loadPresets(bank.file_path.c_str());
+                    for (int i = 0; i < PresetController::kNumPresets; i++)
+                    {
+                        snprintf(text, sizeof(text), "%d: %s", i, presetController.getPreset(i).getName().c_str());
+
+                        char *bank_file_path = strdup(bank.file_path.c_str());
+                        size_t preset_index = (size_t)i;
+
+                        /**
+                         * c. Apply preset when you click a preset item 
+                         */
+                        if (ImGui::Selectable(text, selected == i))
+                        {
+                            // Mark selected item
+                            // TODO: Make item index unique among the whole preset viewer, or it will always select item(s)
+                            // with the same index in each tree
+                            selected = i;
+
+                            PresetController presetController;
+                            presetController.loadPresets(bank_file_path); // Load preset bank
+
+                            Preset &preset = presetController.getPreset((int)preset_index); // Load preset item
+                            for (unsigned int i = 0; i < kAmsynthParameterCount; i++)       // Apply preset parameters
+                            {
+                                float value = preset.getParameter(i).getValue();
+                                paramList[i] = value;
+                                _onParamChange(paramList, effInstance);
+                            }
+                        }
+                    }
+
+                    ImGui::TreePop(); // Must add this, or ImGui will crash!
+                }
+            }
+
+            ImGui::End();
+        }
+
         // Rendering
         ImGui::Render();
         int display_w, display_h;
