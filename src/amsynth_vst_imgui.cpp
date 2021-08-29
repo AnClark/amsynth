@@ -102,26 +102,22 @@ struct Plugin
 };
 
 #ifdef WITH_GUI
-#if 0
-static void on_adjustment_value_changed(GtkAdjustment *adjustment, AEffect *effect)
+static void on_adjustment_value_changed(float values[], AEffect *effect)
 {
 	Plugin *plugin = (Plugin *)effect->ptr3;
 
 	static Preset dummyPreset;
 
 	for (int i = 0; i < kAmsynthParameterCount; i++) {
-		if (adjustment == plugin->adjustments[i]) {
-			float value = gtk_adjustment_get_value(adjustment);
-			Parameter &param = dummyPreset.getParameter(i);
-			param.setValue(value);
-			plugin->synthesizer->setParameterValue((Param)i, value);
-			if (plugin->audioMaster && !strstr(hostProductString, "Qtractor")) {
-				plugin->audioMaster(effect, audioMasterAutomate, i, 0, nullptr, param.getNormalisedValue());
-			}
+		Parameter &param = dummyPreset.getParameter(i);
+		param.setValue(values[i]);
+		plugin->synthesizer->setParameterValue((Param)i, values[i]);
+		if (plugin->audioMaster && !strstr(hostProductString, "Qtractor")) {
+			plugin->audioMaster(effect, audioMasterAutomate, i, 0, nullptr, param.getNormalisedValue());
 		}
 	}
 }
-#endif
+
 void modal_midi_learn(Param param_index) {}
 
 #endif // WITH_GUI
@@ -185,7 +181,8 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 		}
 		case effEditOpen: {
 			if (!plugin->editorInstance) {
-				plugin->editorInstance = new ImguiEditor(ptr, WINDOW_WIDTH, WINDOW_HEIGHT);
+				plugin->editorInstance = new ImguiEditor(ptr, WINDOW_WIDTH, WINDOW_HEIGHT, plugin->synthesizer);
+				plugin->editorInstance->setParamChangeCallback(on_adjustment_value_changed, effect);
 				plugin->editorInstance->openEditor();
 			}
 			return 1;
