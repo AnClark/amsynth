@@ -26,6 +26,9 @@
 #include "../PresetController.h"
 #include "../Synthesizer.h"
 
+#include "../gettext.h"
+#define _(string) gettext (string)
+
 typedef void (*ParamChangeCallback) (float[], AEffect *);
 
 class ImguiEditor
