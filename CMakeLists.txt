@@ -140,8 +140,9 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/glfw)
 # supplied tool to convert it to a header file.
 file (MAKE_DIRECTORY ${GENERATED_FONT_DIR})
 add_executable (binary_to_compressed EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/vendor/imgui/misc/fonts/binary_to_compressed_c.cpp)
+target_link_options (binary_to_compressed PRIVATE -static)
 add_custom_command (OUTPUT ${GENERATED_FONT_DIR}/font.h
-                    COMMAND ./binary_to_compressed "${INCLUDED_FONT}" font > "${GENERATED_FONT_DIR}/font.h"
+                    COMMAND ./binary_to_compressed${CMAKE_EXECUTABLE_SUFFIX} "${INCLUDED_FONT}" font > "${GENERATED_FONT_DIR}/font.h"
                     DEPENDS binary_to_compressed VERBATIM)
 
 add_custom_target (generate_font DEPENDS ${GENERATED_FONT_DIR}/font.h)
