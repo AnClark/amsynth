@@ -3,6 +3,25 @@
 
 static int glfw_initialized_cnt;
 
+/**
+ * Calculate string hash.
+ * Reference: https://www.cnblogs.com/moyujiang/p/11213535.html
+ */
+int mini_hash(char *str)
+{
+    // Mod factors. Both P and MOD should be prime number.
+    const int P = 13;
+    const int MOD = 101;
+
+    const int len = strlen(str);
+    int hash[len] = {0};
+
+    for (int i = 0; i < len; i++)
+        hash[i] = (hash[i - 1]) * P + (int)(str[i]) % MOD; // Hash formula
+
+    return hash[len - 1];
+}
+
 #ifdef _WIN32
 
 /**
@@ -241,12 +260,10 @@ void ImguiEditor::drawFrame()
                         /**
                          * c. Apply preset when you click a preset item 
                          */
-                        if (ImGui::Selectable(text, selected == i))
+                        int node_index = i + mini_hash(text); // Calculate unique index (almost unique among normal usages)
+                        if (ImGui::Selectable(text, selected == node_index))
                         {
-                            // Mark selected item
-                            // TODO: Make item index unique among the whole preset viewer, or it will always select item(s)
-                            // with the same index in each tree
-                            selected = i;
+                            selected = node_index; // Mark selected item
 
                             PresetController presetController;
                             presetController.loadPresets(bank_file_path); // Load preset bank
