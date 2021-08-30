@@ -382,6 +382,11 @@ if (CONFIG_VST_IMGUI)
         #imgui
     )
 
+    # Link against static GNU libc/libstdc++ when not using MSVC compilers
+    if (WIN32 AND NOT MSVC)
+        target_link_options (${PROJECT_NAME}_vst_imgui PRIVATE -static-libgcc -static-libstdc++)
+    endif ()
+
     # Disable "cast from 'gpointer' {aka 'void*'} to 'long int' loses precision" warning on Windows
     if (WIN32)
         target_compile_options (${PROJECT_NAME}_vst_imgui PRIVATE -fpermissive)
