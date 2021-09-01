@@ -183,6 +183,9 @@ void ImguiEditor::drawFrame()
     _getParamValues();
 
     // Called once per idle slice
+    // Remember to check myImGuiContext before drawing frames, or ImGui_ImplOpenGL2_NewFrame() may execute
+    // on an empty context after closeEditor()!
+    if (myImGuiContext)
     {
         ImGui::SetCurrentContext(myImGuiContext);
 
@@ -320,6 +323,10 @@ void ImguiEditor::closeEditor()
 {
     if (myImGuiContext)
     {
+        // Set current context to make sure that the following two shutdown functions
+        // can be in right context
+        ImGui::SetCurrentContext(myImGuiContext);
+
         // Cleanup
         ImGui_ImplOpenGL2_Shutdown();
         ImGui_ImplGlfw_Shutdown();
