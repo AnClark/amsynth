@@ -65,3 +65,5 @@ tmp/**
 *.tar.*
 .vscode
 .backup
+*.orig
+*.rej
