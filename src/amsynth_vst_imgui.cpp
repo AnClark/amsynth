@@ -1,7 +1,8 @@
 /*
- *  amsynth_vst.cpp
+ *  amsynth_vst_imgui.cpp
  *
  *  Copyright (c) 2008-2020 Nick Dowell
+ *  Copyright (c) 2021 AnClark Liu
  *
  *  This file is part of amsynth.
  *
@@ -40,8 +41,8 @@
 #endif
 
 /** Default UI size */
-const int WINDOW_WIDTH = 1024;
-const int WINDOW_HEIGHT = 768;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 540;
 
 // from http://www.asseca.org/vst-24-specs/index.html
 #define effGetParamLabel        6

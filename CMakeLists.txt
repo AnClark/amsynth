@@ -1,3 +1,21 @@
+#  amsynth CMakeLists.txt
+#
+#  Copyright (C) 2021 AnClark Liu
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
 cmake_minimum_required (VERSION 3.10)
 
 project(amsynth
@@ -350,11 +368,19 @@ if (CONFIG_VST_IMGUI)
         ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
         ${IMGUI_DIR}/backends/imgui_impl_opengl2.cpp
     )
+    set (IMGUI_ADDON_SRC
+        vendor/imgui_addons/zynlab/imgui_common.cpp
+        vendor/imgui_addons/zynlab/imgui_knob.cpp
+    )
+    set (IMGUI_ADDON_INCLUDE_DIR
+        vendor/imgui_addons/zynlab
+    )
     #add_library (imgui STATIC ${IMGUI_SRC})
     #target_include_directories (imgui PRIVATE ${IMGUI_DIR})
 
     add_library (${PROJECT_NAME}_vst_imgui SHARED
         ${IMGUI_SRC}
+        ${IMGUI_ADDON_SRC}
         src/amsynth_vst_imgui.cpp
         vendor/vestige/aeffectx.h
         src/ImGui/editor_pane.cpp

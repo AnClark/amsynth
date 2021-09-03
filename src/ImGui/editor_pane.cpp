@@ -1,3 +1,24 @@
+/*
+ *  editor_pane.cpp
+ *
+ *  Copyright (c) 2021 AnClark Liu
+ *
+ *  This file is part of amsynth.
+ *
+ *  amsynth is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  amsynth is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with amsynth.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "editor_pane.h"
 #include "font.h"
 
@@ -28,13 +49,9 @@ int mini_hash(char *str)
  * Set / reset window's parent on Windows.
  * I handle these two functions with my modded GLFW (https://github.com/anclark/GLFW)
  */
-void reparent_window([[maybe_unused]] GLFWwindow *window, void *host_window)
-{
-}
+void reparent_window([[maybe_unused]] GLFWwindow *window, void *host_window) {}
 
-void reparent_window_to_root([[maybe_unused]] GLFWwindow *window)
-{
-}
+void reparent_window_to_root([[maybe_unused]] GLFWwindow *window) {}
 #else
 /**
  * Set / reset window's parent on Linux.
@@ -201,92 +218,442 @@ void ImguiEditor::drawFrame()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 1. Show a window listing all those possible parameters
+        /** ==============================================================================
+         *  Main Window Section
+         *  ==============================================================================
+         * 
+         * Notes:
+         * - ImGui widgets may use label name to identify each other. Keep them unique.
+         *   To create widgets with same label, append "##%d" (%d means a unique integer).
+         *   For example:
+         *       ImGui::Button("Test Button##1");
+         *       ImGui::Button("Test Button##2");
+         * 
+         * - Do not use static variables to store current values, especially for widgets
+         *   using int / enum values (DropDown, SliderInt, etc.).
+         *   Otherwise, you will not be able to get value from host when setting the value
+         *   on host side, or loading programs.
+         * 
+         *   Call _onParamChange() instead. Parameter synchronization between DSP and
+         *   editor will do the right things.
+         */
+
+        // Fullscreen window parameters
+        static ImGuiWindowFlags flagsMainWindow = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->Pos);
+        ImGui::SetNextWindowSize(viewport->Size);
+
+        // Common buffers
+        double lower = 0, upper = 0, step_increment = 0; // Buffer for initializing parameter range
+                                                         // NOTICE: step_increment is not supported by ImGui
+        char buttonLabel[20];                            // Buffer for creating unique button labels
+
+        ImGui::Begin("Amsynth Main Window", (bool *)true, flagsMainWindow);
+
+        // Section 01: OSC1
         {
-            ImGui::Begin("Hello, Amsynth! - Parameter summary");
+            ImGui::BeginGroup();
+            ImGui::Text("OSC 1");
 
-            for (int i = 0; i < kAmsynthParameterCount; i++)
+            // Waveform Switch
             {
-                ImGui::Text("[%s]: %f", paramNameList[i], paramList[i]);
-            }
-
-            ImGui::End();
-        }
-
-        // 2. Show a window with siiders controlling all those parameters
-        {
-            ImGui::Begin("Hello, Amsynth! - Simple parameter controller");
-
-            for (int i = 0; i < kAmsynthParameterCount; i++)
-            {
-                double lower = 0, upper = 0, step_increment = 0; // NOTICE: step_increment is not supported by ImGui
-                _getParamProperties(i, &lower, &upper, nullptr, &step_increment);
-
-                if (ImGui::SliderFloat(paramNameList[i], &paramList[i], (float)lower, (float)upper))
+                const unsigned char OSC1_WAVEFORM_COUNT = 5;
+                static const char *osc1_waveformOptions[OSC1_WAVEFORM_COUNT] = {"Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample (Hold)"};
+                unsigned char osc1_waveformSelected = (int)paramList[kAmsynthParameter_Oscillator1Waveform];
+                if (ImGui::BeginPopupContextItem("OSC1 Waveform"))
                 {
+                    for (int i = 0; i < OSC1_WAVEFORM_COUNT; i++)
+                        if (ImGui::Selectable(osc1_waveformOptions[i]))
+                            osc1_waveformSelected = i;
+
+                    paramList[kAmsynthParameter_Oscillator1Waveform] = (float)osc1_waveformSelected;
                     _onParamChange(paramList, effInstance);
-                }
-            }
 
-            ImGui::End();
+                    ImGui::EndPopup();
+                }
+
+                sprintf(buttonLabel, "%s##1", osc1_waveformOptions[osc1_waveformSelected]);
+                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
+                    ImGui::OpenPopup("OSC1 Waveform");
+            }
+            ImGui::SameLine();
+
+            // Shape (Pulse Width)
+            fetchParamRange(kAmsynthParameter_Oscillator1Pulsewidth);
+            if (ImGui::Knob("Shape", &paramList[kAmsynthParameter_Oscillator1Pulsewidth], lower, upper, ImVec2(40, 40), "Shape"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
         }
 
-        // 3. Show a window listing all the presets
+        // Section 02: OSC2
         {
-            ImGui::Begin("Hello Amsynth! - Preset list");
+            ImGui::BeginGroup();
+            ImGui::Text("OSC 2");
 
-            for (auto &bank : PresetController::getPresetBanks())
+            // Waveform Switch
             {
-                char text[64]; // Buffer
-
-                /**
-                 * a. Create root nodes for each bank 
-                 */
-                snprintf(text, sizeof(text), "[%s] %s", bank.read_only ? _("F") : _("U"), bank.name.c_str());
-                if (ImGui::TreeNode(text))
+                const unsigned char OSC2_WAVEFORM_COUNT = 5;
+                static const char *osc2_waveformOptions[OSC2_WAVEFORM_COUNT] = {"Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample (Hold)"};
+                unsigned char osc2_waveformSelected = (int)paramList[kAmsynthParameter_Oscillator2Waveform];
+                if (ImGui::BeginPopupContextItem("OSC2 Waveform"))
                 {
-                    /**
-                     * b. Create child nodes for each preset item 
-                     *    Each bank has up to 127 presets, accessed by index.
-                     */
-                    static int selected = -1; // Current selection's index
+                    for (int i = 0; i < OSC2_WAVEFORM_COUNT; i++)
+                        if (ImGui::Selectable(osc2_waveformOptions[i]))
+                            osc2_waveformSelected = i;
 
-                    PresetController presetController;
-                    presetController.loadPresets(bank.file_path.c_str());
-                    for (int i = 0; i < PresetController::kNumPresets; i++)
-                    {
-                        snprintf(text, sizeof(text), "%d: %s", i, presetController.getPreset(i).getName().c_str());
+                    paramList[kAmsynthParameter_Oscillator2Waveform] = (float)osc2_waveformSelected;
+                    _onParamChange(paramList, effInstance);
 
-                        char *bank_file_path = strdup(bank.file_path.c_str());
-                        size_t preset_index = (size_t)i;
-
-                        /**
-                         * c. Apply preset when you click a preset item 
-                         */
-                        int node_index = i + mini_hash(text); // Calculate unique index (almost unique among normal usages)
-                        if (ImGui::Selectable(text, selected == node_index))
-                        {
-                            selected = node_index; // Mark selected item
-
-                            PresetController presetController;
-                            presetController.loadPresets(bank_file_path); // Load preset bank
-
-                            Preset &preset = presetController.getPreset((int)preset_index); // Load preset item
-                            for (unsigned int i = 0; i < kAmsynthParameterCount; i++)       // Apply preset parameters
-                            {
-                                float value = preset.getParameter(i).getValue();
-                                paramList[i] = value;
-                                _onParamChange(paramList, effInstance);
-                            }
-                        }
-                    }
-
-                    ImGui::TreePop(); // Must add this, or ImGui will crash!
+                    ImGui::EndPopup();
                 }
+
+                sprintf(buttonLabel, "%s##2", osc2_waveformOptions[osc2_waveformSelected]);
+                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
+                    ImGui::OpenPopup("OSC2 Waveform");
             }
 
-            ImGui::End();
+            ImGui::SameLine();
+
+            // Shape (Pulse Width)
+            fetchParamRange(kAmsynthParameter_Oscillator2Pulsewidth);
+            if (ImGui::Knob("Shape 2", &paramList[kAmsynthParameter_Oscillator2Pulsewidth], lower, upper, ImVec2(40, 40), "Shape"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            // "Sync to OSC1" switch
+            bool osc2_syncWithOSC1Toggle = paramList[kAmsynthParameter_Oscillator2Sync] >= 1.0f ? true : false;
+            if (ImGui::Checkbox("Sync to OSC1", &osc2_syncWithOSC1Toggle))
+            {
+                paramList[kAmsynthParameter_Oscillator2Sync] = osc2_syncWithOSC1Toggle ? 1.0f : 0.0f;
+                _onParamChange(paramList, effInstance);
+            }
+
+            ImGui::EndGroup();
         }
+
+        // Section 03: Tune for OSC 2
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("Tune for OSC 2");
+
+            // Octave
+            int osc2_octaveValue = (int)paramList[kAmsynthParameter_Oscillator2Octave]; // NOTICE: Also avoid using static var
+            if (ImGui::SliderInt("OSC2 Octave", &osc2_octaveValue, -3, 4))
+            {
+                paramList[kAmsynthParameter_Oscillator2Octave] = (float)osc2_octaveValue;
+                _onParamChange(paramList, effInstance);
+            }
+
+            ImGui::SameLine();
+
+            // Semitone
+            // TODO: Create ImGui::KnobInt
+            fetchParamRange(kAmsynthParameter_Oscillator2Pitch);
+            if (ImGui::Knob("Pitch", &paramList[kAmsynthParameter_Oscillator2Pitch], lower, upper, ImVec2(90, 40), "Semitone"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            // Detune
+            fetchParamRange(kAmsynthParameter_Oscillator2Detune);
+            if (ImGui::Knob("Detune", &paramList[kAmsynthParameter_Oscillator2Detune], lower, upper, ImVec2(90, 40), "Detune"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
+        }
+
+        // Section 04: AMP Envelope
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("AMP Envelope");
+
+            const int rows = 4;
+            const float spacing = 4;
+            const ImVec2 small_slider_size(18, (float)(int)((320.0f - (rows - 1) * spacing) / rows));
+
+            fetchParamRange(kAmsynthParameter_AmpEnvAttack);
+            if (ImGui::VSliderFloat("Attack", small_slider_size, &paramList[kAmsynthParameter_AmpEnvAttack], lower, upper, ""))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_AmpEnvDecay);
+            if (ImGui::VSliderFloat("Decay", small_slider_size, &paramList[kAmsynthParameter_AmpEnvDecay], lower, upper, ""))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_AmpEnvSustain);
+            if (ImGui::VSliderFloat("Sustain", small_slider_size, &paramList[kAmsynthParameter_AmpEnvSustain], lower, upper, ""))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_AmpEnvRelease);
+            if (ImGui::VSliderFloat("Release", small_slider_size, &paramList[kAmsynthParameter_AmpEnvRelease], lower, upper, ""))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
+        }
+
+        ImGui::SameLine();
+
+        // Section 05: OSC Mix
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("OSC Mix");
+
+            fetchParamRange(kAmsynthParameter_OscillatorMix);
+            if (ImGui::Knob("OSC Balance", &paramList[kAmsynthParameter_OscillatorMix], lower, upper, ImVec2(70, 40), "OSC Mix"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_OscillatorMixRingMod);
+            if (ImGui::Knob("Ring Mod", &paramList[kAmsynthParameter_OscillatorMixRingMod], lower, upper, ImVec2(80, 40), "Ring Mod"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
+        }
+
+        ImGui::SameLine();
+
+        // Section 06: AMP Volume / Drive
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("AMP");
+
+            fetchParamRange(kAmsynthParameter_MasterVolume);
+            if (ImGui::Knob("Master Volume", &paramList[kAmsynthParameter_MasterVolume], lower, upper, ImVec2(90, 40), "Master Volume"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_AmpDistortion);
+            if (ImGui::Knob("Distortion", &paramList[kAmsynthParameter_AmpDistortion], lower, upper, ImVec2(70, 40), "Distortion"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
+        }
+
+        // Section: LFO
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("LFO");
+            ImGui::SameLine(0, 90);
+
+            // LFO Waveform Switch
+            {
+                const unsigned char LFO_WAVEFORM_COUNT = 7;
+                static const char *lfo_waveformOptions[LFO_WAVEFORM_COUNT] = {"Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample & Hold", "Sawtooth (up)", "Sawtooth (down)"};
+                static const char *lfo_waveformIcon[LFO_WAVEFORM_COUNT]; // TODO: Add icon resource
+                int lfo_waveformSelected = (int)paramList[kAmsynthParameter_LFOWaveform];
+                if (ImGui::BeginPopupContextItem("LFO Waveform"))
+                {
+                    for (int i = 0; i < LFO_WAVEFORM_COUNT; i++)
+                        if (ImGui::Selectable(lfo_waveformOptions[i]))
+                            lfo_waveformSelected = i;
+
+                    paramList[kAmsynthParameter_LFOWaveform] = (float)lfo_waveformSelected;
+                    _onParamChange(paramList, effInstance);
+
+                    ImGui::EndPopup();
+                }
+
+                sprintf(buttonLabel, "%s##3", lfo_waveformOptions[lfo_waveformSelected]);
+                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
+                    ImGui::OpenPopup("LFO Waveform");
+            }
+
+            ImGui::SameLine(0, 40);
+
+            // LFO OSC selector
+            {
+                const int LFO_OSC_SELECTION_COUNT = 3;
+                int lfo_oscSelected = (int)paramList[kAmsynthParameter_LFOOscillatorSelect];
+                const char *lfo_oscSelectorOptions[LFO_OSC_SELECTION_COUNT] = {"OSC 1+2", "OSC 1", "OSC2"};
+                if (ImGui::BeginPopupContextItem("OSC Selector"))
+                {
+                    for (int i = 0; i < LFO_OSC_SELECTION_COUNT; i++)
+                        if (ImGui::Selectable(lfo_oscSelectorOptions[i]))
+                            lfo_oscSelected = i;
+
+                    paramList[kAmsynthParameter_LFOOscillatorSelect] = (float)lfo_oscSelected;
+                    _onParamChange(paramList, effInstance);
+
+                    ImGui::EndPopup();
+                }
+
+                sprintf(buttonLabel, "%s##1", lfo_oscSelectorOptions[lfo_oscSelected]);
+                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
+                    ImGui::OpenPopup("OSC Selector");
+            }
+
+            // Frequency
+            fetchParamRange(kAmsynthParameter_LFOFreq);
+            if (ImGui::Knob("Speed", &paramList[kAmsynthParameter_LFOFreq], lower, upper, ImVec2(80, 40), "LFO Frequency"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            // Freq Mod Amount
+            fetchParamRange(kAmsynthParameter_LFOToOscillators);
+            if (ImGui::Knob("Mod Amount", &paramList[kAmsynthParameter_LFOToOscillators], lower, upper, ImVec2(90, 40), "LFO Mod Amount"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_LFOToFilterCutoff);
+            if (ImGui::Knob("To Filter", &paramList[kAmsynthParameter_LFOToFilterCutoff], lower, upper, ImVec2(80, 40), "LFO to Filter"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_LFOToAmp);
+            if (ImGui::Knob("To Amp", &paramList[kAmsynthParameter_LFOToAmp], lower, upper, ImVec2(80, 40), "LFO to Amp"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
+        }
+
+        // Section: Reverb
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("Reverb");
+
+            fetchParamRange(kAmsynthParameter_ReverbWet);
+            if (ImGui::Knob("Amount", &paramList[kAmsynthParameter_ReverbWet], lower, upper, ImVec2(80, 40), "Reverb Amount"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_ReverbRoomsize);
+            if (ImGui::Knob("Size", &paramList[kAmsynthParameter_ReverbRoomsize], lower, upper, ImVec2(80, 40), "Room Size"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_ReverbDamp);
+            if (ImGui::Knob("Damp", &paramList[kAmsynthParameter_ReverbDamp], lower, upper, ImVec2(80, 40), "Damp"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_ReverbWidth);
+            if (ImGui::Knob("Width", &paramList[kAmsynthParameter_ReverbWidth], lower, upper, ImVec2(80, 40), "Reverb Width"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
+        }
+
+        ImGui::SameLine();
+
+        // Section: Filter
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("Filter");
+            ImGui::SameLine(0, 90);
+
+            // ------ Filter option selectors ------
+            {
+                const int FILTER_TYPE_COUNT = 5;
+                static const char *filter_typeOptions[FILTER_TYPE_COUNT] = {"Low Pass", "High Pass", "Band Pass", "Notch", "Bypass"};
+                unsigned char filter_typeSelected = (int)paramList[kAmsynthParameter_FilterType];
+
+                if (ImGui::BeginPopupContextItem("Filter Type"))
+                {
+                    for (int i = 0; i < FILTER_TYPE_COUNT; i++)
+                        if (ImGui::Selectable(filter_typeOptions[i]))
+                            filter_typeSelected = i;
+
+                    paramList[kAmsynthParameter_FilterType] = (float)filter_typeSelected;
+                    _onParamChange(paramList, effInstance);
+
+                    ImGui::EndPopup();
+                }
+
+                sprintf(buttonLabel, "%s##1", filter_typeOptions[filter_typeSelected]);
+                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
+                    ImGui::OpenPopup("Filter Type");
+            }
+
+            ImGui::SameLine(0, 40);
+
+            {
+                const int FILTER_SLOPE_COUNT = 2;
+                int filter_slopeSelected = (int)paramList[kAmsynthParameter_FilterSlope];
+                const char *filter_slopeOptions[FILTER_SLOPE_COUNT] = {"12 dB", "24 dB"};
+
+                if (ImGui::BeginPopupContextItem("Filter Slope"))
+                {
+                    for (int i = 0; i < FILTER_SLOPE_COUNT; i++)
+                        if (ImGui::Selectable(filter_slopeOptions[i]))
+                            filter_slopeSelected = i;
+
+                    paramList[kAmsynthParameter_FilterSlope] = (float)filter_slopeSelected;
+                    _onParamChange(paramList, effInstance);
+
+                    ImGui::EndPopup();
+                }
+
+                sprintf(buttonLabel, "%s##1", filter_slopeOptions[filter_slopeSelected]);
+                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
+                    ImGui::OpenPopup("Filter Slope");
+            }
+
+            // ------ Filter basic options ------
+            fetchParamRange(kAmsynthParameter_FilterResonance);
+            if (ImGui::Knob("Reson", &paramList[kAmsynthParameter_FilterResonance], lower, upper, ImVec2(90, 40), "Resonance"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_FilterCutoff);
+            if (ImGui::Knob("Cut Off", &paramList[kAmsynthParameter_FilterCutoff], lower, upper, ImVec2(90, 40), "Cut Off"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_FilterKeyTrackAmount);
+            if (ImGui::Knob("Key Track", &paramList[kAmsynthParameter_FilterKeyTrackAmount], lower, upper, ImVec2(90, 40), "Key Track"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_FilterEnvAmount);
+            if (ImGui::Knob("Env Amt", &paramList[kAmsynthParameter_FilterEnvAmount], lower, upper, ImVec2(90, 40), "Env Amount"))
+                _onParamChange(paramList, effInstance);
+
+            // ------ Filter ADSR ------
+            fetchParamRange(kAmsynthParameter_FilterEnvAttack);
+            if (ImGui::Knob("FLT Attack", &paramList[kAmsynthParameter_FilterEnvAttack], lower, upper, ImVec2(90, 40), ""))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_FilterEnvDecay);
+            if (ImGui::Knob("FLT Decay", &paramList[kAmsynthParameter_FilterEnvDecay], lower, upper, ImVec2(90, 40), ""))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_FilterEnvSustain);
+            if (ImGui::Knob("FLT Sustain", &paramList[kAmsynthParameter_FilterEnvSustain], lower, upper, ImVec2(90, 40), ""))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_FilterEnvRelease);
+            if (ImGui::Knob("FLT Release", &paramList[kAmsynthParameter_FilterEnvRelease], lower, upper, ImVec2(90, 40), ""))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
+        }
+
+        ImGui::End();
 
         // Rendering
         ImGui::Render();
