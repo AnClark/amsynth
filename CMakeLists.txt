@@ -371,9 +371,11 @@ if (CONFIG_VST_IMGUI)
     set (IMGUI_ADDON_SRC
         vendor/imgui_addons/zynlab/imgui_common.cpp
         vendor/imgui_addons/zynlab/imgui_knob.cpp
+        vendor/imgui_addons/anclark/imgui_extra_button.cpp
     )
     set (IMGUI_ADDON_INCLUDE_DIR
         vendor/imgui_addons/zynlab
+        vendor/imgui_addons/anclark
     )
     #add_library (imgui STATIC ${IMGUI_SRC})
     #target_include_directories (imgui PRIVATE ${IMGUI_DIR})

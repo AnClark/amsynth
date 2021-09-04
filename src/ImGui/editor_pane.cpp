@@ -261,21 +261,11 @@ void ImguiEditor::drawFrame()
                 const unsigned char OSC1_WAVEFORM_COUNT = 5;
                 static const char *osc1_waveformOptions[OSC1_WAVEFORM_COUNT] = {"Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample (Hold)"};
                 unsigned char osc1_waveformSelected = (int)paramList[kAmsynthParameter_Oscillator1Waveform];
-                if (ImGui::BeginPopupContextItem("OSC1 Waveform"))
+                if (ImGui::ComboButton("OSC1 Waveform", osc1_waveformSelected, osc1_waveformOptions, OSC1_WAVEFORM_COUNT, ImVec2(70, 0), "OSC1 Waveform"))
                 {
-                    for (int i = 0; i < OSC1_WAVEFORM_COUNT; i++)
-                        if (ImGui::Selectable(osc1_waveformOptions[i]))
-                            osc1_waveformSelected = i;
-
                     paramList[kAmsynthParameter_Oscillator1Waveform] = (float)osc1_waveformSelected;
                     _onParamChange(paramList, effInstance);
-
-                    ImGui::EndPopup();
                 }
-
-                sprintf(buttonLabel, "%s##1", osc1_waveformOptions[osc1_waveformSelected]);
-                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
-                    ImGui::OpenPopup("OSC1 Waveform");
             }
             ImGui::SameLine();
 
@@ -297,21 +287,12 @@ void ImguiEditor::drawFrame()
                 const unsigned char OSC2_WAVEFORM_COUNT = 5;
                 static const char *osc2_waveformOptions[OSC2_WAVEFORM_COUNT] = {"Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample (Hold)"};
                 unsigned char osc2_waveformSelected = (int)paramList[kAmsynthParameter_Oscillator2Waveform];
-                if (ImGui::BeginPopupContextItem("OSC2 Waveform"))
-                {
-                    for (int i = 0; i < OSC2_WAVEFORM_COUNT; i++)
-                        if (ImGui::Selectable(osc2_waveformOptions[i]))
-                            osc2_waveformSelected = i;
 
+                if (ImGui::ComboButton("OSC2 Waveform", osc2_waveformSelected, osc2_waveformOptions, OSC2_WAVEFORM_COUNT, ImVec2(70, 0), "OSC2 Waveform"))
+                {
                     paramList[kAmsynthParameter_Oscillator2Waveform] = (float)osc2_waveformSelected;
                     _onParamChange(paramList, effInstance);
-
-                    ImGui::EndPopup();
                 }
-
-                sprintf(buttonLabel, "%s##2", osc2_waveformOptions[osc2_waveformSelected]);
-                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
-                    ImGui::OpenPopup("OSC2 Waveform");
             }
 
             ImGui::SameLine();
@@ -450,48 +431,28 @@ void ImguiEditor::drawFrame()
                 const unsigned char LFO_WAVEFORM_COUNT = 7;
                 static const char *lfo_waveformOptions[LFO_WAVEFORM_COUNT] = {"Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample & Hold", "Sawtooth (up)", "Sawtooth (down)"};
                 static const char *lfo_waveformIcon[LFO_WAVEFORM_COUNT]; // TODO: Add icon resource
-                int lfo_waveformSelected = (int)paramList[kAmsynthParameter_LFOWaveform];
-                if (ImGui::BeginPopupContextItem("LFO Waveform"))
-                {
-                    for (int i = 0; i < LFO_WAVEFORM_COUNT; i++)
-                        if (ImGui::Selectable(lfo_waveformOptions[i]))
-                            lfo_waveformSelected = i;
+                unsigned char lfo_waveformSelected = (int)paramList[kAmsynthParameter_LFOWaveform];
 
+                if (ImGui::ComboButton("LFO Waveform", lfo_waveformSelected, lfo_waveformOptions, LFO_WAVEFORM_COUNT, ImVec2(70, 0), "LFO Waveform"))
+                {
                     paramList[kAmsynthParameter_LFOWaveform] = (float)lfo_waveformSelected;
                     _onParamChange(paramList, effInstance);
-
-                    ImGui::EndPopup();
                 }
-
-                sprintf(buttonLabel, "%s##3", lfo_waveformOptions[lfo_waveformSelected]);
-                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
-                    ImGui::OpenPopup("LFO Waveform");
             }
-
             ImGui::SameLine(0, 40);
 
             // LFO OSC selector
             {
                 const int LFO_OSC_SELECTION_COUNT = 3;
-                int lfo_oscSelected = (int)paramList[kAmsynthParameter_LFOOscillatorSelect];
+                unsigned char lfo_oscSelected = (int)paramList[kAmsynthParameter_LFOOscillatorSelect];
                 const char *lfo_oscSelectorOptions[LFO_OSC_SELECTION_COUNT] = {"OSC 1+2", "OSC 1", "OSC2"};
-                if (ImGui::BeginPopupContextItem("OSC Selector"))
-                {
-                    for (int i = 0; i < LFO_OSC_SELECTION_COUNT; i++)
-                        if (ImGui::Selectable(lfo_oscSelectorOptions[i]))
-                            lfo_oscSelected = i;
 
+                if (ImGui::ComboButton("OSC Selector", lfo_oscSelected, lfo_oscSelectorOptions, LFO_OSC_SELECTION_COUNT, ImVec2(70, 0), "OSC Selector"))
+                {
                     paramList[kAmsynthParameter_LFOOscillatorSelect] = (float)lfo_oscSelected;
                     _onParamChange(paramList, effInstance);
-
-                    ImGui::EndPopup();
                 }
-
-                sprintf(buttonLabel, "%s##1", lfo_oscSelectorOptions[lfo_oscSelected]);
-                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
-                    ImGui::OpenPopup("OSC Selector");
             }
-
             // Frequency
             fetchParamRange(kAmsynthParameter_LFOFreq);
             if (ImGui::Knob("Speed", &paramList[kAmsynthParameter_LFOFreq], lower, upper, ImVec2(80, 40), "LFO Frequency"))
@@ -563,45 +524,25 @@ void ImguiEditor::drawFrame()
                 static const char *filter_typeOptions[FILTER_TYPE_COUNT] = {"Low Pass", "High Pass", "Band Pass", "Notch", "Bypass"};
                 unsigned char filter_typeSelected = (int)paramList[kAmsynthParameter_FilterType];
 
-                if (ImGui::BeginPopupContextItem("Filter Type"))
+                if (ImGui::ComboButton("Filter Type", filter_typeSelected, filter_typeOptions, FILTER_TYPE_COUNT, ImVec2(70, 0), "Filter Type"))
                 {
-                    for (int i = 0; i < FILTER_TYPE_COUNT; i++)
-                        if (ImGui::Selectable(filter_typeOptions[i]))
-                            filter_typeSelected = i;
-
                     paramList[kAmsynthParameter_FilterType] = (float)filter_typeSelected;
                     _onParamChange(paramList, effInstance);
-
-                    ImGui::EndPopup();
                 }
-
-                sprintf(buttonLabel, "%s##1", filter_typeOptions[filter_typeSelected]);
-                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
-                    ImGui::OpenPopup("Filter Type");
             }
 
             ImGui::SameLine(0, 40);
 
             {
                 const int FILTER_SLOPE_COUNT = 2;
-                int filter_slopeSelected = (int)paramList[kAmsynthParameter_FilterSlope];
+                unsigned char filter_slopeSelected = (int)paramList[kAmsynthParameter_FilterSlope];
                 const char *filter_slopeOptions[FILTER_SLOPE_COUNT] = {"12 dB", "24 dB"};
 
-                if (ImGui::BeginPopupContextItem("Filter Slope"))
+                if (ImGui::ComboButton("Filter Slope", filter_slopeSelected, filter_slopeOptions, FILTER_SLOPE_COUNT, ImVec2(70, 0), "Filter Slope"))
                 {
-                    for (int i = 0; i < FILTER_SLOPE_COUNT; i++)
-                        if (ImGui::Selectable(filter_slopeOptions[i]))
-                            filter_slopeSelected = i;
-
                     paramList[kAmsynthParameter_FilterSlope] = (float)filter_slopeSelected;
                     _onParamChange(paramList, effInstance);
-
-                    ImGui::EndPopup();
                 }
-
-                sprintf(buttonLabel, "%s##1", filter_slopeOptions[filter_slopeSelected]);
-                if (ImGui::Button(buttonLabel, ImVec2(70, 0)))
-                    ImGui::OpenPopup("Filter Slope");
             }
 
             // ------ Filter basic options ------
