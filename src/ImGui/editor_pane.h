@@ -32,6 +32,7 @@
 
 /** ImGui addons */
 #include <imgui_addons/zynlab/imgui_knob.h>
+#include <imgui_addons/anclark/imgui_extra_button.h>
 
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
