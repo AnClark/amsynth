@@ -594,6 +594,76 @@ void ImguiEditor::drawFrame()
             ImGui::EndGroup();
         }
 
+        // Section: Keyboard Options
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("Keyboard Options");
+
+            fetchParamRange(kAmsynthParameter_PortamentoTime);
+            if (ImGui::Knob("Portamento Time", &paramList[kAmsynthParameter_PortamentoTime], lower, upper, ImVec2(100, 40), "Portamento Time"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            {
+                ImGui::BeginGroup();
+                {
+                    const int PORTAMENTO_MODE_COUNT = 2;
+                    unsigned char portamento_modeSelected = (int)paramList[kAmsynthParameter_PortamentoMode];
+                    const char *portamento_modeOptions[PORTAMENTO_MODE_COUNT] = {"Always", "Legato"};
+
+                    if (ImGui::ComboButton("Portamento Mode", portamento_modeSelected, portamento_modeOptions, PORTAMENTO_MODE_COUNT, ImVec2(100, 0), nullptr))
+                    {
+                        paramList[kAmsynthParameter_PortamentoMode] = (float)portamento_modeSelected;
+                        _onParamChange(paramList, effInstance);
+                    }
+                }
+                ImGui::Text("Portamento Mode");
+                ImGui::EndGroup();
+            }
+
+            ImGui::SameLine();
+
+            {
+                ImGui::BeginGroup();
+                {
+                    const int KEYBOARD_MODE_COUNT = 3;
+                    unsigned char keyboard_modeSelected = (int)paramList[kAmsynthParameter_KeyboardMode];
+                    const char *keyboard_modeOptions[KEYBOARD_MODE_COUNT] = {"Poly", "Mono", "Legato"};
+
+                    if (ImGui::ComboButton("Keyboard Mode", keyboard_modeSelected, keyboard_modeOptions, KEYBOARD_MODE_COUNT, ImVec2(100, 0), nullptr))
+                    {
+                        paramList[kAmsynthParameter_KeyboardMode] = (float)keyboard_modeSelected;
+                        _onParamChange(paramList, effInstance);
+                    }
+                }
+                ImGui::Text("Keyboard Mode");
+                ImGui::EndGroup();
+            }
+
+            ImGui::EndGroup();
+        }
+
+        ImGui::SameLine();
+
+        // Section: Velocity strategy - How to process velocity
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("Velocity Strategy");
+
+            fetchParamRange(kAmsynthParameter_FilterKeyVelocityAmount);
+            if (ImGui::Knob("VEL -> FLT", &paramList[kAmsynthParameter_FilterKeyVelocityAmount], lower, upper, ImVec2(100, 40), "Velocity to Filter Amount"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::SameLine();
+
+            fetchParamRange(kAmsynthParameter_AmpVelocityAmount);
+            if (ImGui::Knob("VEL -> AMP", &paramList[kAmsynthParameter_AmpVelocityAmount], lower, upper, ImVec2(100, 40), "Velocity to Amp Amount"))
+                _onParamChange(paramList, effInstance);
+
+            ImGui::EndGroup();
+        }
+
         // Section: Option buttons
         // TODO: Must move to elsewhere properly
         {
