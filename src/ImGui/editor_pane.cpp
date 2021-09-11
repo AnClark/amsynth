@@ -91,6 +91,15 @@ void ImguiEditor::_getParamValues()
     }
 }
 
+void ImguiEditor::panic()
+{
+    // Build MIDI data of All Sound Off
+    unsigned char buffer[3] = {MIDI_STATUS_CONTROLLER, MIDI_CC_ALL_SOUND_OFF, 0}; // Buffer format: {status, data1, data2}
+
+    // Directly apply MIDI data
+    synthInstance->getMidiController()->HandleMidiData(buffer, 3);
+}
+
 static void glfw_error_callback(int error, const char *description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -674,6 +683,11 @@ void ImguiEditor::drawFrame()
 
             if (ImGui::Button("Randomise", ImVec2(90, 0)))
                 synthInstance->getPresetController()->randomiseCurrentPreset();
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Panic", ImVec2(90, 0)))
+                panic();
         }
 
         ImGui::End();
