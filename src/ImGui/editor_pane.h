@@ -47,6 +47,8 @@
 /** Communicate with DSP part */
 #include <vestige/aeffectx.h>
 #include "../Preset.h"
+#include "../midi.h"
+#include "../MidiController.h"
 #include "../PresetController.h"
 #include "../Synthesizer.h"
 
@@ -66,6 +68,7 @@ public:
     void drawFrame();
 
     void setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance);
+    void panic();
 
 private:
     GLFWwindow *window;
