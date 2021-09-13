@@ -56,6 +56,10 @@ const int WINDOW_HEIGHT = 540;
 #define effBeginLoadBank        75
 #define effFlagsProgramChunks   (1 << 5)
 
+// From LSP Plugins (https://github.com/sadko4u/lsp-plugins)
+#define effSetProgramName          4
+#define effGetProgramNameIndexed   29
+
 #ifdef WITH_GUI
 // TODO: ImGui-related headers
 #include "ImGui/editor_pane.h"
@@ -138,20 +142,57 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			return 0;
 
 		case effSetProgram: {
+			// Apply built-in program.
+			// @param val: Target program index set by host.
+
+			// Obtain bank and preset
 			auto &bank = PresetController::getPresetBanks().at(val / kPresetsPerBank);
 			auto &preset = bank.presets[val % kPresetsPerBank];
+
+			// Keep current preset name / index via our own variables
 			plugin->presetName = preset.getName();
 			plugin->programNumber = val;
+
+			// Apply preset
 			plugin->synthesizer->_presetController->setCurrentPreset(preset);
 			return 1;
 		}
 
-		case effGetProgram:
-			return plugin->programNumber;
+		case effSetProgramName: {
+			// Set current program name on host when invoking effSetProgram
+			// @param ptr: Pointer where host receives program name
 
-		case effGetProgramName:
 			strncpy((char *)ptr, plugin->presetName.c_str(), 24);
 			return 1;
+		}
+
+		case effGetProgram:
+			// Get current program index.
+			// Implement this so that host can mark which program we've set
+
+			return plugin->programNumber;
+
+		case effGetProgramNameIndexed: {
+			// Prepare all the built-in program names.
+			// Host will query every built-in program by invoking effGetProgramNameIndexed.
+			// @param index: The program index where the host queries
+
+			// Check if there were preset files or not
+			// If you don't check, host will crash if no preset was installed
+			if (PresetController::getPresetBanks().size()) {
+				// Obtain bank and preset
+				auto &bank = PresetController::getPresetBanks().at(index / kPresetsPerBank);
+				auto &preset = bank.presets[index % kPresetsPerBank];
+
+				// Set current obtained preset name, then show the name on host
+				plugin->presetName = preset.getName();
+				strncpy((char *)ptr, plugin->presetName.c_str(), 24);
+				return 1;
+			} else {
+				// Do not continue accessing if no preset was found
+				return 1;
+			}
+		}
 
 		case effGetParamLabel:
 			plugin->synthesizer->getParameterLabel((Param)index, (char *)ptr, 32);
