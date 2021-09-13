@@ -74,6 +74,16 @@ void ImguiEditor::_getParamValues()
     }
 }
 
+void ImguiEditor::writeLog(const char *logContent)
+{
+    logBuffer.push_back(std::string(logContent));
+}
+
+void ImguiEditor::clearLog()
+{
+    logBuffer.clear();
+}
+
 static void glfw_error_callback(int error, const char *description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -287,6 +297,27 @@ void ImguiEditor::drawFrame()
 
             ImGui::End();
         }
+
+        // 4. Show a log dialog
+        {
+            ImGui::Begin("Hello Amsynth! - Log");
+
+            if (ImGui::Button("Clear Log"))
+            {
+                logBuffer.clear();
+            }
+
+            ImGui::BeginListBox("Log List", ImVec2(-FLT_MIN, 20 * ImGui::GetTextLineHeightWithSpacing()));
+            for (std::vector<std::string>::iterator it = logBuffer.begin(); it != logBuffer.end(); it++)
+            {
+                //ImGui::Text("[LOG] %s", it->c_str());
+                ImGui::Selectable(it->c_str());
+            }
+            ImGui::EndListBox();
+
+            ImGui::End();
+        }
+#endif
 
         // Rendering
         ImGui::Render();

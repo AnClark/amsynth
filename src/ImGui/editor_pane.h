@@ -9,6 +9,9 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include <vector>
+#include <string>
+static std::vector<std::string> logBuffer;
 
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
@@ -42,6 +45,9 @@ public:
     void drawFrame();
 
     void setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance);
+
+    static void writeLog(const char *logConent);
+    static void clearLog();
 
 private:
     GLFWwindow *window;
