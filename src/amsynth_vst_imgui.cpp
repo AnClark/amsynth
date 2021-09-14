@@ -159,6 +159,14 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 		}
 
 		case effSetProgramName: {
+			// Set current program name on plugin side
+			// @param ptr: Pointer of host's current preset name
+
+			plugin->presetName = std::string((char *)ptr);
+			return 1;
+		}
+
+		case effGetProgramName: {
 			// Set current program name on host when invoking effSetProgram
 			// @param ptr: Pointer where host receives program name
 
