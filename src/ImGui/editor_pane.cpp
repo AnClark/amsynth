@@ -687,6 +687,11 @@ void ImguiEditor::drawFrame()
 
             ImGui::SameLine();
 
+            if (ImGui::Button("Sample View", ImVec2(120, 0)))
+                ImguiEditor::showSampleWindow = !ImguiEditor::showSampleWindow;
+
+            ImGui::SameLine();
+
             if (ImGui::Button("Randomise", ImVec2(90, 0)))
                 synthInstance->getPresetController()->randomiseCurrentPreset();
 
@@ -769,10 +774,29 @@ void ImguiEditor::drawFrame()
          *  Sample View Window Section
          *  ==============================================================================
          */
+        if (showSampleWindow)
         {
             ImGui::Begin("Hello Amsynth! - Sample View");
 
             ImGui::Text("Sample count: %d", this->numCurrentSample);
+
+            {
+                const int revealSampleCount = 180; // Sample count to be used to draw oscilloscope
+                                                   // Too much samples won't make sense
+                float revealSamples[revealSampleCount]; // Samples to be used to draw oscilloscope
+                
+                // Quantize sample value for ImGui::PlotLines() rendering
+                // To make each sample value resides on the base of a middle value
+                for (int i = 0; i < revealSampleCount; i++)
+                {
+                    revealSamples[i] = 1.0f - (currentSample[i] * 2);
+                }
+
+                // Render oscilloscope with ImGui::PlotLines()
+                // NOTICE: Remember to set scales properly: (scale_max + scale_min) / 2 = middle_value
+                //         Use larger scale to prevent cutting off
+                ImGui::PlotLines("Oscilloscope", revealSamples, revealSampleCount, 0, "", 0.0f, 2.0f, ImVec2(0, 80.0f));
+            }
 
             for (int i = 0; i < this->numCurrentSample; i++)
             {
