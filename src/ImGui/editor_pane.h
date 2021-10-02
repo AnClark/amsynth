@@ -33,6 +33,7 @@
 /** ImGui addons */
 #include <imgui_addons/zynlab/imgui_knob.h>
 #include <imgui_addons/anclark/imgui_extra_button.h>
+#include <imgui_addons/anclark/imgui_oscilloscope.h>
 
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
@@ -70,6 +71,8 @@ public:
     void setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance);
     void panic();
 
+    void setCurrentSample(int numSamples, float *samples);
+
 private:
     GLFWwindow *window;
     ImGuiContext *myImGuiContext = nullptr;
@@ -91,6 +94,10 @@ private:
     float paramList[kAmsynthParameterCount];
     char *paramNameList[kAmsynthParameterCount];
     ParamChangeCallback _onParamChange;
+
+    // Data for oscilloscope
+    int numCurrentSample;
+    float *currentSample;
 
     void _getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size);
     void _getParamValues();
