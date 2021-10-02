@@ -128,6 +128,12 @@ void ImguiEditor::setParamChangeCallback(ParamChangeCallback func, AEffect *effI
     this->effInstance = effInstance;
 }
 
+void ImguiEditor::setCurrentSample(int numSamples, float *samples)
+{
+    this->numCurrentSample = numSamples;
+    this->currentSample = samples;
+}
+
 void ImguiEditor::_setupGLFW()
 {
     /**
@@ -284,6 +290,12 @@ void ImguiEditor::drawFrame()
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
+        }
+
+        // Section 01.5: Oscilloscope
+        ImGui::SameLine();
+        {
+            ImGui::Oscilloscope("##Oscilloscope", currentSample, numCurrentSample, 180, ImVec2(0, 80.0f));
         }
 
         // Section 02: OSC2
