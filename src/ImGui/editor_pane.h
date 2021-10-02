@@ -70,6 +70,8 @@ public:
     void setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance);
     void panic();
 
+    void setCurrentSample(int numSamples, float *samples);
+
 private:
     GLFWwindow *window;
     ImGuiContext *myImGuiContext = nullptr;
@@ -91,6 +93,10 @@ private:
     float paramList[kAmsynthParameterCount];
     char *paramNameList[kAmsynthParameterCount];
     ParamChangeCallback _onParamChange;
+
+    // Oscilloscope data
+    int numCurrentSample;
+    float *currentSample;
 
     void _getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size);
     void _getParamValues();

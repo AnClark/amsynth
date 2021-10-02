@@ -128,6 +128,12 @@ void ImguiEditor::setParamChangeCallback(ParamChangeCallback func, AEffect *effI
     this->effInstance = effInstance;
 }
 
+void ImguiEditor::setCurrentSample(int numSamples, float *samples)
+{
+    this->numCurrentSample = numSamples;
+    this->currentSample = samples;
+}
+
 void ImguiEditor::_setupGLFW()
 {
     /**
@@ -756,6 +762,23 @@ void ImguiEditor::drawFrame()
                     bank_index++;
                 }
             }
+            ImGui::End();
+        }
+
+        /** ==============================================================================
+         *  Sample View Window Section
+         *  ==============================================================================
+         */
+        {
+            ImGui::Begin("Hello Amsynth! - Sample View");
+
+            ImGui::Text("Sample count: %d", this->numCurrentSample);
+
+            for (int i = 0; i < this->numCurrentSample; i++)
+            {
+                ImGui::Text("[Sample %3d] %f", i, this->currentSample[i]);
+            }
+
             ImGui::End();
         }
 

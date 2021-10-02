@@ -380,6 +380,16 @@ static void processReplacing(AEffect *effect, float **inputs, float **outputs, i
 	std::vector<amsynth_midi_cc_t> midi_out;
 	plugin->synthesizer->process(numSampleFrames, plugin->midiEvents, midi_out, outputs[0], outputs[1]);
 	plugin->midiEvents.clear();
+
+#ifdef WITH_GUI
+	// Prepare samples for editor's oscilloscope
+	// NOTE: processReplacing() is the real function where I can get sample data,
+	//       not process().
+	if (plugin->editorInstance)
+	{
+		plugin->editorInstance->setCurrentSample(numSampleFrames, outputs[0]);
+	}
+#endif
 }
 
 static void setParameter(AEffect *effect, int i, float f)
