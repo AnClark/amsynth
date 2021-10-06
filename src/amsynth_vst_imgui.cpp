@@ -239,7 +239,8 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 		}
 		case effEditClose: {
 			if (plugin->editorInstance) {
-				plugin->editorInstance->closeEditor();
+				// FIXME: Maybe only invoke closeEditor() once can prevent assertion?
+				//plugin->editorInstance->closeEditor();
 				delete plugin->editorInstance;
 				plugin->editorInstance = nullptr;
 			}
