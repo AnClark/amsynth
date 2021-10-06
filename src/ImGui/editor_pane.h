@@ -72,6 +72,7 @@ public:
     void panic();
 
     void setCurrentSample(int numSamples, float *samples);
+    ImGuiContext *getContext();
 
 private:
     GLFWwindow *window;

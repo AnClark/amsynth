@@ -23,6 +23,7 @@
 #include "font.h"
 
 static int glfw_initialized_cnt;
+static ImguiEditor *currentEditorInstance;
 
 /**
  * Calculate string hash.
@@ -108,18 +109,32 @@ static void glfw_error_callback(int error, const char *description)
 #endif
 }
 
+static void glfw_cursor_enter_callback(GLFWwindow* window, int entered)
+{
+    if (!currentEditorInstance && !currentEditorInstance->getContext())
+        return;
+
+    ImGui::SetCurrentContext(currentEditorInstance->getContext());
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+
+    io.WantCaptureMouse = entered ? true : false;
+}
+
 ImguiEditor::ImguiEditor(void *parentId, int width, int height, Synthesizer *synthInstance)
 {
     this->parentId = parentId;
     this->width = width;
     this->height = height;
     this->synthInstance = synthInstance;
+    currentEditorInstance = this;
 }
 
 ImguiEditor::~ImguiEditor()
 {
     // Re-call closeEditor() in case user forget to call it
     closeEditor();
+    currentEditorInstance = nullptr;
 }
 
 void ImguiEditor::setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance)
@@ -132,6 +147,11 @@ void ImguiEditor::setCurrentSample(int numSamples, float *samples)
 {
     this->numCurrentSample = numSamples;
     this->currentSample = samples;
+}
+
+ImGuiContext *ImguiEditor::getContext()
+{
+    return this->myImGuiContext;
 }
 
 void ImguiEditor::_setupGLFW()
@@ -172,6 +192,9 @@ void ImguiEditor::_setupGLFW()
     // On both Windows and Linux, there's an implementation within my modded GLFW.
     // So they are empty functions now.
     reparent_window(window, this->parentId);
+
+    // Set callback of cursor enter or not
+    glfwSetCursorEnterCallback(window, glfw_cursor_enter_callback);
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
@@ -265,6 +288,14 @@ void ImguiEditor::drawFrame()
         char buttonLabel[20];                            // Buffer for creating unique button labels
 
         ImGui::Begin("Amsynth Main Window", (bool *)true, flagsMainWindow);
+
+        // TEST: If io.wantCaptureMouse activated
+        {
+            ImGuiIO &io = ImGui::GetIO();
+            (void)io;
+
+            ImGui::Text("io.wantCaptureMouse = %d", io.WantCaptureMouse ? 1 : 0);
+        }
 
         // Section 01: OSC1
         {
