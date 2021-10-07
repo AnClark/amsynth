@@ -748,6 +748,8 @@ void ImguiEditor::drawFrame()
                         int node_index = i + mini_hash(text); // Calculate unique index (almost unique among normal usages)
                         if (ImGui::Selectable(text, selected == node_index))
                         {
+                            panic(); // Stop all sound before continue
+
                             selected = node_index; // Mark selected item
 
                             PresetController presetController;
