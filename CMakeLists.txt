@@ -373,6 +373,7 @@ if (CONFIG_VST_IMGUI)
         vendor/imgui_addons/zynlab/imgui_knob.cpp
         vendor/imgui_addons/anclark/imgui_extra_button.cpp
         vendor/imgui_addons/anclark/imgui_oscilloscope.cpp
+        vendor/imgui_addons/ofx/imgui_controls.cpp
     )
     set (IMGUI_ADDON_INCLUDE_DIR
         vendor/imgui_addons/zynlab

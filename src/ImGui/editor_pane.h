@@ -34,6 +34,7 @@
 #include <imgui_addons/zynlab/imgui_knob.h>
 #include <imgui_addons/anclark/imgui_extra_button.h>
 #include <imgui_addons/anclark/imgui_oscilloscope.h>
+#include <imgui_addons/ofx/imgui_controls.h>
 
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
@@ -54,9 +55,9 @@
 #include "../Synthesizer.h"
 
 #include "../gettext.h"
-#define _(string) gettext (string)
+#define _(string) gettext(string)
 
-typedef void (*ParamChangeCallback) (float[], AEffect *);
+typedef void (*ParamChangeCallback)(float[], AEffect *);
 
 class ImguiEditor
 {
@@ -107,4 +108,4 @@ private:
 
 // Get parameter range before creating widget
 // You must define float variables "lower", "upper", "step_increment" before this macro
-#define fetchParamRange(index)  _getParamProperties(index, &lower, &upper, nullptr, &step_increment)
+#define fetchParamRange(index) _getParamProperties(index, &lower, &upper, nullptr, &step_increment)

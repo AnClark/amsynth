@@ -702,6 +702,14 @@ void ImguiEditor::drawFrame()
                 panic();
         }
 
+        /**
+         * ================== FREE TEST ==================
+         */
+        {
+            //ImGui::ImGuiWindow *window = ImGui::GetCurrentWindow();
+            ImGuiEx::EnvelopeEditor(200.0f, 100.0f, &paramList[kAmsynthParameter_AmpEnvAttack], &paramList[kAmsynthParameter_AmpEnvDecay], &paramList[kAmsynthParameter_AmpEnvSustain], &paramList[kAmsynthParameter_AmpEnvRelease], ImGuiEnvelopeEditorType_ADSR);
+        }
+
         ImGui::End();
 
         /** ==============================================================================
