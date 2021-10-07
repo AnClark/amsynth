@@ -127,6 +127,17 @@ void modal_midi_learn(Param param_index) {}
 
 #endif // WITH_GUI
 
+void panic_on_dsp_side(AEffect *effect)
+{
+	Plugin *plugin = (Plugin *)effect->ptr3;
+
+    // Build MIDI data of All Sound Off
+    unsigned char buffer[3] = {MIDI_STATUS_CONTROLLER, MIDI_CC_ALL_SOUND_OFF, 0}; // Buffer format: {status, data1, data2}
+
+    // Directly apply MIDI data
+    plugin->synthesizer->getMidiController()->HandleMidiData(buffer, 3);
+}
+
 static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val, void *ptr, float f)
 {
 	Plugin *plugin = (Plugin *)effect->ptr3;
@@ -144,6 +155,9 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 		case effSetProgram: {
 			// Apply built-in program.
 			// @param val: Target program index set by host.
+
+			// Stop all sound before applying preset
+			panic_on_dsp_side(effect);
 
 			// Obtain bank and preset
 			auto &bank = PresetController::getPresetBanks().at(val / kPresetsPerBank);
