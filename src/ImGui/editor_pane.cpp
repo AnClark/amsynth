@@ -289,14 +289,6 @@ void ImguiEditor::drawFrame()
 
         ImGui::Begin("Amsynth Main Window", (bool *)true, flagsMainWindow);
 
-        // TEST: If io.wantCaptureMouse activated
-        {
-            ImGuiIO &io = ImGui::GetIO();
-            (void)io;
-
-            ImGui::Text("io.wantCaptureMouse = %d", io.WantCaptureMouse ? 1 : 0);
-        }
-
         // Section 01: OSC1
         {
             ImGui::BeginGroup();
@@ -779,6 +771,8 @@ void ImguiEditor::drawFrame()
                         int node_index = i + mini_hash(text); // Calculate unique index (almost unique among normal usages)
                         if (ImGui::Selectable(text, selected == node_index))
                         {
+                            panic(); // Stop all sound before continue
+
                             selected = node_index; // Mark selected item
 
                             PresetController presetController;
