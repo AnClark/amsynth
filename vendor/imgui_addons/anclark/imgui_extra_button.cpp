@@ -45,7 +45,7 @@ bool ImGui::ComboButton(char const *label, unsigned char &value, char const *con
     }
 
     sprintf(button_label, "%s##%d", names[value], mini_hash(label));
-    if (ImGui::Button(button_label, ImVec2(70, 0)))
+    if (ImGui::Button(button_label, size))
         ImGui::OpenPopup(label);
 
     if (tooltip)
