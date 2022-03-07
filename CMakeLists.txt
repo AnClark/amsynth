@@ -477,6 +477,13 @@ if (CONFIG_VST)
     )
 endif ()
 
+if (CONFIG_VST_IMGUI)
+    install (FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${PROJECT_NAME}_vst_imgui${SF}
+        DESTINATION ${CONFIG_VST_PATH}
+        RENAME amsynth_vst_imgui${SF}
+    )
+endif ()
+
 # Install LV2
 if (CONFIG_LV2)
     set (LV2_TARGET_DIR ${CONFIG_LV2_PATH}/${PROJECT_NAME}.lv2)
