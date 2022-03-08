@@ -279,9 +279,7 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 		case effProcessEvents: {
 			VstEvents *events = (VstEvents *)ptr;
 
-#if _WIN32		// Do not assert on Windows
-			plugin->midiEvents.empty();
-#else
+#if !_WIN32		// Do not assert on Windows
 			assert(plugin->midiEvents.empty());
 #endif
 
