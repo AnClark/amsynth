@@ -99,12 +99,12 @@ private:
     int numCurrentSample;
     float *currentSample;
 
+    // Parameter properties
     void _getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size);
-    void _getParamValues();
+    void _getAllParameters();
+    double paramMinValues[kAmsynthParameterCount] = {0.0f};
+    double paramMaxValues[kAmsynthParameterCount] = {0.0f};
+    double paramDefaultValues[kAmsynthParameterCount] = {0.0f}; // NOTICE: Currently unnecessary, because DSP side will automatically
+                                                                //         apply default values when needed
+    double paramStepSizes[kAmsynthParameterCount] = {0.0f};     // NOTICE: step_increment is not supported by ImGui
 };
-
-/** Shortcuts */
-
-// Get parameter range before creating widget
-// You must define float variables "lower", "upper", "step_increment" before this macro
-#define fetchParamRange(index)  _getParamProperties(index, &lower, &upper, nullptr, &step_increment)

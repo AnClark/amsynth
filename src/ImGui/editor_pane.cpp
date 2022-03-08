@@ -62,6 +62,14 @@ void reparent_window([[maybe_unused]] GLFWwindow *window, void *host_window) {}
 void reparent_window_to_root([[maybe_unused]] GLFWwindow *window) {}
 #endif
 
+/**
+ * Get a parameter's properties.
+ * @param parameter_index Parameter's index.
+ * @param minimum A pointed var to store parameter's minimum value.
+ * @param maximum A pointed var to store parameter's maximum value.
+ * @param default_value A pointed var to store parameter's default value. (Currently unneeded)
+ * @param step_size A pointed var to store parameter's step increment size. (Currently unneeded)
+ */
 void ImguiEditor::_getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size)
 {
     Preset preset;
@@ -80,14 +88,22 @@ void ImguiEditor::_getParamProperties(int parameter_index, double *minimum, doub
         *step_size = parameter.getStep();
 }
 
-void ImguiEditor::_getParamValues()
+/**
+ * Get all parameters' values and properties before creating any controllers.
+ */
+void ImguiEditor::_getAllParameters()
 {
     for (int i = 0; i < kAmsynthParameterCount; i++)
     {
+        // Get parameter values
         paramList[i] = (float)synthInstance->getParameterValue((Param)i);
 
+        // Get parameter names
         paramNameList[i] = (char *)malloc(sizeof(char *) * 32);
         synthInstance->getParameterName((Param)i, paramNameList[i], 32);
+
+        // Get parameter properties
+        _getParamProperties(i, &paramMinValues[i], &paramMaxValues[i], &paramDefaultValues[i], &paramStepSizes[i]);
     }
 }
 
@@ -211,8 +227,8 @@ void ImguiEditor::_setupImGui()
 
 void ImguiEditor::drawFrame()
 {
-    // Get current parameter names and values
-    _getParamValues();
+    // Get current parameter names, values and properties
+    _getAllParameters();
 
     // Called once per idle slice
     // Remember to check myImGuiContext before drawing frames, or ImGui_ImplOpenGL2_NewFrame() may execute
@@ -260,9 +276,7 @@ void ImguiEditor::drawFrame()
         ImGui::SetNextWindowSize(viewport->Size);
 
         // Common buffers
-        double lower = 0, upper = 0, step_increment = 0; // Buffer for initializing parameter range
-                                                         // NOTICE: step_increment is not supported by ImGui
-        char buttonLabel[20];                            // Buffer for creating unique button labels
+        char buttonLabel[20]; // Buffer for creating unique button labels
 
         ImGui::Begin("Amsynth Main Window", (bool *)true, flagsMainWindow);
 
@@ -285,8 +299,7 @@ void ImguiEditor::drawFrame()
             ImGui::SameLine();
 
             // Shape (Pulse Width)
-            fetchParamRange(kAmsynthParameter_Oscillator1Pulsewidth);
-            if (ImGui::Knob("Shape", &paramList[kAmsynthParameter_Oscillator1Pulsewidth], lower, upper, ImVec2(40, 40), "Shape"))
+            if (ImGui::Knob("Shape", &paramList[kAmsynthParameter_Oscillator1Pulsewidth], paramMinValues[kAmsynthParameter_Oscillator1Pulsewidth], paramMaxValues[kAmsynthParameter_Oscillator1Pulsewidth], ImVec2(40, 40), "Shape"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
@@ -319,8 +332,7 @@ void ImguiEditor::drawFrame()
             ImGui::SameLine();
 
             // Shape (Pulse Width)
-            fetchParamRange(kAmsynthParameter_Oscillator2Pulsewidth);
-            if (ImGui::Knob("Shape 2", &paramList[kAmsynthParameter_Oscillator2Pulsewidth], lower, upper, ImVec2(40, 40), "Shape"))
+            if (ImGui::Knob("Shape 2", &paramList[kAmsynthParameter_Oscillator2Pulsewidth], paramMinValues[kAmsynthParameter_Oscillator2Pulsewidth], paramMaxValues[kAmsynthParameter_Oscillator2Pulsewidth], ImVec2(40, 40), "Shape"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
@@ -353,15 +365,13 @@ void ImguiEditor::drawFrame()
 
             // Semitone
             // TODO: Create ImGui::KnobInt
-            fetchParamRange(kAmsynthParameter_Oscillator2Pitch);
-            if (ImGui::Knob("Pitch", &paramList[kAmsynthParameter_Oscillator2Pitch], lower, upper, ImVec2(90, 40), "Semitone"))
+            if (ImGui::Knob("Pitch", &paramList[kAmsynthParameter_Oscillator2Pitch], paramMinValues[kAmsynthParameter_Oscillator2Pitch], paramMaxValues[kAmsynthParameter_Oscillator2Pitch], ImVec2(90, 40), "Semitone"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
             // Detune
-            fetchParamRange(kAmsynthParameter_Oscillator2Detune);
-            if (ImGui::Knob("Detune", &paramList[kAmsynthParameter_Oscillator2Detune], lower, upper, ImVec2(90, 40), "Detune"))
+            if (ImGui::Knob("Detune", &paramList[kAmsynthParameter_Oscillator2Detune], paramMinValues[kAmsynthParameter_Oscillator2Detune], paramMaxValues[kAmsynthParameter_Oscillator2Detune], ImVec2(90, 40), "Detune"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
@@ -376,26 +386,22 @@ void ImguiEditor::drawFrame()
             const float spacing = 4;
             const ImVec2 small_slider_size(18, (float)(int)((320.0f - (rows - 1) * spacing) / rows));
 
-            fetchParamRange(kAmsynthParameter_AmpEnvAttack);
-            if (ImGui::VSliderFloat("Attack", small_slider_size, &paramList[kAmsynthParameter_AmpEnvAttack], lower, upper, ""))
+            if (ImGui::VSliderFloat("Attack", small_slider_size, &paramList[kAmsynthParameter_AmpEnvAttack], paramMinValues[kAmsynthParameter_AmpEnvAttack], paramMaxValues[kAmsynthParameter_AmpEnvAttack], ""))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_AmpEnvDecay);
-            if (ImGui::VSliderFloat("Decay", small_slider_size, &paramList[kAmsynthParameter_AmpEnvDecay], lower, upper, ""))
+            if (ImGui::VSliderFloat("Decay", small_slider_size, &paramList[kAmsynthParameter_AmpEnvDecay], paramMinValues[kAmsynthParameter_AmpEnvDecay], paramMaxValues[kAmsynthParameter_AmpEnvDecay], ""))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_AmpEnvSustain);
-            if (ImGui::VSliderFloat("Sustain", small_slider_size, &paramList[kAmsynthParameter_AmpEnvSustain], lower, upper, ""))
+            if (ImGui::VSliderFloat("Sustain", small_slider_size, &paramList[kAmsynthParameter_AmpEnvSustain], paramMinValues[kAmsynthParameter_AmpEnvSustain], paramMaxValues[kAmsynthParameter_AmpEnvSustain], ""))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_AmpEnvRelease);
-            if (ImGui::VSliderFloat("Release", small_slider_size, &paramList[kAmsynthParameter_AmpEnvRelease], lower, upper, ""))
+            if (ImGui::VSliderFloat("Release", small_slider_size, &paramList[kAmsynthParameter_AmpEnvRelease], paramMinValues[kAmsynthParameter_AmpEnvRelease], paramMaxValues[kAmsynthParameter_AmpEnvRelease], ""))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
@@ -408,14 +414,12 @@ void ImguiEditor::drawFrame()
             ImGui::BeginGroup();
             ImGui::Text("OSC Mix");
 
-            fetchParamRange(kAmsynthParameter_OscillatorMix);
-            if (ImGui::Knob("OSC Balance", &paramList[kAmsynthParameter_OscillatorMix], lower, upper, ImVec2(70, 40), "OSC Mix"))
+            if (ImGui::Knob("OSC Balance", &paramList[kAmsynthParameter_OscillatorMix], paramMinValues[kAmsynthParameter_OscillatorMix], paramMaxValues[kAmsynthParameter_OscillatorMix], ImVec2(70, 40), "OSC Mix"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_OscillatorMixRingMod);
-            if (ImGui::Knob("Ring Mod", &paramList[kAmsynthParameter_OscillatorMixRingMod], lower, upper, ImVec2(80, 40), "Ring Mod"))
+            if (ImGui::Knob("Ring Mod", &paramList[kAmsynthParameter_OscillatorMixRingMod], paramMinValues[kAmsynthParameter_OscillatorMixRingMod], paramMaxValues[kAmsynthParameter_OscillatorMixRingMod], ImVec2(80, 40), "Ring Mod"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
@@ -428,14 +432,12 @@ void ImguiEditor::drawFrame()
             ImGui::BeginGroup();
             ImGui::Text("AMP");
 
-            fetchParamRange(kAmsynthParameter_MasterVolume);
-            if (ImGui::Knob("Master Volume", &paramList[kAmsynthParameter_MasterVolume], lower, upper, ImVec2(90, 40), "Master Volume"))
+            if (ImGui::Knob("Master Volume", &paramList[kAmsynthParameter_MasterVolume], paramMinValues[kAmsynthParameter_MasterVolume], paramMaxValues[kAmsynthParameter_MasterVolume], ImVec2(90, 40), "Master Volume"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_AmpDistortion);
-            if (ImGui::Knob("Distortion", &paramList[kAmsynthParameter_AmpDistortion], lower, upper, ImVec2(70, 40), "Distortion"))
+            if (ImGui::Knob("Distortion", &paramList[kAmsynthParameter_AmpDistortion], paramMinValues[kAmsynthParameter_AmpDistortion], paramMaxValues[kAmsynthParameter_AmpDistortion], ImVec2(70, 40), "Distortion"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
@@ -475,27 +477,23 @@ void ImguiEditor::drawFrame()
                 }
             }
             // Frequency
-            fetchParamRange(kAmsynthParameter_LFOFreq);
-            if (ImGui::Knob("Speed", &paramList[kAmsynthParameter_LFOFreq], lower, upper, ImVec2(80, 40), "LFO Frequency"))
+            if (ImGui::Knob("Speed", &paramList[kAmsynthParameter_LFOFreq], paramMinValues[kAmsynthParameter_LFOFreq], paramMaxValues[kAmsynthParameter_LFOFreq], ImVec2(80, 40), "LFO Frequency"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
             // Freq Mod Amount
-            fetchParamRange(kAmsynthParameter_LFOToOscillators);
-            if (ImGui::Knob("Mod Amount", &paramList[kAmsynthParameter_LFOToOscillators], lower, upper, ImVec2(90, 40), "LFO Mod Amount"))
+            if (ImGui::Knob("Mod Amount", &paramList[kAmsynthParameter_LFOToOscillators], paramMinValues[kAmsynthParameter_LFOToOscillators], paramMaxValues[kAmsynthParameter_LFOToOscillators], ImVec2(90, 40), "LFO Mod Amount"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_LFOToFilterCutoff);
-            if (ImGui::Knob("To Filter", &paramList[kAmsynthParameter_LFOToFilterCutoff], lower, upper, ImVec2(80, 40), "LFO to Filter"))
+            if (ImGui::Knob("To Filter", &paramList[kAmsynthParameter_LFOToFilterCutoff], paramMinValues[kAmsynthParameter_LFOToFilterCutoff], paramMaxValues[kAmsynthParameter_LFOToFilterCutoff], ImVec2(80, 40), "LFO to Filter"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_LFOToAmp);
-            if (ImGui::Knob("To Amp", &paramList[kAmsynthParameter_LFOToAmp], lower, upper, ImVec2(80, 40), "LFO to Amp"))
+            if (ImGui::Knob("To Amp", &paramList[kAmsynthParameter_LFOToAmp], paramMinValues[kAmsynthParameter_LFOToAmp], paramMaxValues[kAmsynthParameter_LFOToAmp], ImVec2(80, 40), "LFO to Amp"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
@@ -506,26 +504,22 @@ void ImguiEditor::drawFrame()
             ImGui::BeginGroup();
             ImGui::Text("Reverb");
 
-            fetchParamRange(kAmsynthParameter_ReverbWet);
-            if (ImGui::Knob("Amount", &paramList[kAmsynthParameter_ReverbWet], lower, upper, ImVec2(80, 40), "Reverb Amount"))
+            if (ImGui::Knob("Amount", &paramList[kAmsynthParameter_ReverbWet], paramMinValues[kAmsynthParameter_ReverbWet], paramMaxValues[kAmsynthParameter_ReverbWet], ImVec2(80, 40), "Reverb Amount"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_ReverbRoomsize);
-            if (ImGui::Knob("Size", &paramList[kAmsynthParameter_ReverbRoomsize], lower, upper, ImVec2(80, 40), "Room Size"))
+            if (ImGui::Knob("Size", &paramList[kAmsynthParameter_ReverbRoomsize], paramMinValues[kAmsynthParameter_ReverbRoomsize], paramMaxValues[kAmsynthParameter_ReverbRoomsize], ImVec2(80, 40), "Room Size"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_ReverbDamp);
-            if (ImGui::Knob("Damp", &paramList[kAmsynthParameter_ReverbDamp], lower, upper, ImVec2(80, 40), "Damp"))
+            if (ImGui::Knob("Damp", &paramList[kAmsynthParameter_ReverbDamp], paramMinValues[kAmsynthParameter_ReverbDamp], paramMaxValues[kAmsynthParameter_ReverbDamp], ImVec2(80, 40), "Damp"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_ReverbWidth);
-            if (ImGui::Knob("Width", &paramList[kAmsynthParameter_ReverbWidth], lower, upper, ImVec2(80, 40), "Reverb Width"))
+            if (ImGui::Knob("Width", &paramList[kAmsynthParameter_ReverbWidth], paramMinValues[kAmsynthParameter_ReverbWidth], paramMaxValues[kAmsynthParameter_ReverbWidth], ImVec2(80, 40), "Reverb Width"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
@@ -567,49 +561,41 @@ void ImguiEditor::drawFrame()
             }
 
             // ------ Filter basic options ------
-            fetchParamRange(kAmsynthParameter_FilterResonance);
-            if (ImGui::Knob("Reson", &paramList[kAmsynthParameter_FilterResonance], lower, upper, ImVec2(90, 40), "Resonance"))
+            if (ImGui::Knob("Reson", &paramList[kAmsynthParameter_FilterResonance], paramMinValues[kAmsynthParameter_FilterResonance], paramMaxValues[kAmsynthParameter_FilterResonance], ImVec2(90, 40), "Resonance"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_FilterCutoff);
-            if (ImGui::Knob("Cut Off", &paramList[kAmsynthParameter_FilterCutoff], lower, upper, ImVec2(90, 40), "Cut Off"))
+            if (ImGui::Knob("Cut Off", &paramList[kAmsynthParameter_FilterCutoff], paramMinValues[kAmsynthParameter_FilterCutoff], paramMaxValues[kAmsynthParameter_FilterCutoff], ImVec2(90, 40), "Cut Off"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_FilterKeyTrackAmount);
-            if (ImGui::Knob("Key Track", &paramList[kAmsynthParameter_FilterKeyTrackAmount], lower, upper, ImVec2(90, 40), "Key Track"))
+            if (ImGui::Knob("Key Track", &paramList[kAmsynthParameter_FilterKeyTrackAmount], paramMinValues[kAmsynthParameter_FilterKeyTrackAmount], paramMaxValues[kAmsynthParameter_FilterKeyTrackAmount], ImVec2(90, 40), "Key Track"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_FilterEnvAmount);
-            if (ImGui::Knob("Env Amt", &paramList[kAmsynthParameter_FilterEnvAmount], lower, upper, ImVec2(90, 40), "Env Amount"))
+            if (ImGui::Knob("Env Amt", &paramList[kAmsynthParameter_FilterEnvAmount], paramMinValues[kAmsynthParameter_FilterEnvAmount], paramMaxValues[kAmsynthParameter_FilterEnvAmount], ImVec2(90, 40), "Env Amount"))
                 _onParamChange(paramList, effInstance);
 
             // ------ Filter ADSR ------
-            fetchParamRange(kAmsynthParameter_FilterEnvAttack);
-            if (ImGui::Knob("FLT Attack", &paramList[kAmsynthParameter_FilterEnvAttack], lower, upper, ImVec2(90, 40), ""))
+            if (ImGui::Knob("FLT Attack", &paramList[kAmsynthParameter_FilterEnvAttack], paramMinValues[kAmsynthParameter_FilterEnvAttack], paramMaxValues[kAmsynthParameter_FilterEnvAttack], ImVec2(90, 40), ""))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_FilterEnvDecay);
-            if (ImGui::Knob("FLT Decay", &paramList[kAmsynthParameter_FilterEnvDecay], lower, upper, ImVec2(90, 40), ""))
+            if (ImGui::Knob("FLT Decay", &paramList[kAmsynthParameter_FilterEnvDecay], paramMinValues[kAmsynthParameter_FilterEnvDecay], paramMaxValues[kAmsynthParameter_FilterEnvDecay], ImVec2(90, 40), ""))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_FilterEnvSustain);
-            if (ImGui::Knob("FLT Sustain", &paramList[kAmsynthParameter_FilterEnvSustain], lower, upper, ImVec2(90, 40), ""))
+            if (ImGui::Knob("FLT Sustain", &paramList[kAmsynthParameter_FilterEnvSustain], paramMinValues[kAmsynthParameter_FilterEnvSustain], paramMaxValues[kAmsynthParameter_FilterEnvSustain], ImVec2(90, 40), ""))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_FilterEnvRelease);
-            if (ImGui::Knob("FLT Release", &paramList[kAmsynthParameter_FilterEnvRelease], lower, upper, ImVec2(90, 40), ""))
+            if (ImGui::Knob("FLT Release", &paramList[kAmsynthParameter_FilterEnvRelease], paramMinValues[kAmsynthParameter_FilterEnvRelease], paramMaxValues[kAmsynthParameter_FilterEnvRelease], ImVec2(90, 40), ""))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
@@ -620,8 +606,7 @@ void ImguiEditor::drawFrame()
             ImGui::BeginGroup();
             ImGui::Text("Keyboard Options");
 
-            fetchParamRange(kAmsynthParameter_PortamentoTime);
-            if (ImGui::Knob("Portamento Time", &paramList[kAmsynthParameter_PortamentoTime], lower, upper, ImVec2(100, 40), "Portamento Time"))
+            if (ImGui::Knob("Portamento Time", &paramList[kAmsynthParameter_PortamentoTime], paramMinValues[kAmsynthParameter_PortamentoTime], paramMaxValues[kAmsynthParameter_PortamentoTime], ImVec2(100, 40), "Portamento Time"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
@@ -672,14 +657,12 @@ void ImguiEditor::drawFrame()
             ImGui::BeginGroup();
             ImGui::Text("Velocity Strategy");
 
-            fetchParamRange(kAmsynthParameter_FilterKeyVelocityAmount);
-            if (ImGui::Knob("VEL -> FLT", &paramList[kAmsynthParameter_FilterKeyVelocityAmount], lower, upper, ImVec2(100, 40), "Velocity to Filter Amount"))
+            if (ImGui::Knob("VEL -> FLT", &paramList[kAmsynthParameter_FilterKeyVelocityAmount], paramMinValues[kAmsynthParameter_FilterKeyVelocityAmount], paramMaxValues[kAmsynthParameter_FilterKeyVelocityAmount], ImVec2(100, 40), "Velocity to Filter Amount"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::SameLine();
 
-            fetchParamRange(kAmsynthParameter_AmpVelocityAmount);
-            if (ImGui::Knob("VEL -> AMP", &paramList[kAmsynthParameter_AmpVelocityAmount], lower, upper, ImVec2(100, 40), "Velocity to Amp Amount"))
+            if (ImGui::Knob("VEL -> AMP", &paramList[kAmsynthParameter_AmpVelocityAmount], paramMinValues[kAmsynthParameter_AmpVelocityAmount], paramMaxValues[kAmsynthParameter_AmpVelocityAmount], ImVec2(100, 40), "Velocity to Amp Amount"))
                 _onParamChange(paramList, effInstance);
 
             ImGui::EndGroup();
