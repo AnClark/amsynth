@@ -180,6 +180,8 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			return 1;
 		}
 		case effEditOpen: {
+			// TODO: Check openEditor()'s return value in case error occur
+			//       so that it can give user a feedback
 			if (!plugin->editorInstance) {
 				plugin->editorInstance = new ImguiEditor(ptr, 1280, 720);
 				plugin->editorInstance->openEditor();

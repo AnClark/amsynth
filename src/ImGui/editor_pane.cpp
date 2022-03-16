@@ -1,32 +1,13 @@
 #include "editor_pane.h"
 
+/**
+ * @brief Initialize threading-related objects
+ */
 thread_local ImGuiContext *myImGuiContext;
 std::mutex ImguiEditor::_init_lock;
 std::atomic<int> ImguiEditor::instance_counter = 0;
 
-#ifdef _WIN32
-
-/**
- * Set / reset window's parent on Windows.
- * I handle these two functions with my modded GLFW (https://github.com/anclark/GLFW)
- */
-void reparent_window([[maybe_unused]] GLFWwindow *window, void *host_window)
-{
-}
-
-void reparent_window_to_root([[maybe_unused]] GLFWwindow *window)
-{
-}
-#else
-/**
- * Set / reset window's parent on Linux.
- * I handle these two functions with my modded GLFW (https://github.com/anclark/GLFW)
- */
-void reparent_window([[maybe_unused]] GLFWwindow *window, void *host_window) {}
-
-void reparent_window_to_root([[maybe_unused]] GLFWwindow *window) {}
-#endif
-
+// TODO: Implement cross-platform messagebox
 static void glfw_error_callback(int error, const char *description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -44,10 +25,9 @@ ImguiEditor::ImguiEditor(void *parentId, int width, int height)
 
 ImguiEditor::~ImguiEditor()
 {
-    // Re-call closeEditor() in case user forget to call it
-    closeEditor();
 }
 
+// TODO: Set a return value!
 void ImguiEditor::_setupGLFW()
 {
     /* Belt and braces! This refcount is mostly for the imgui-glfw backend.
@@ -83,15 +63,11 @@ void ImguiEditor::_setupGLFW()
     if (window == NULL)
         return;
 
-    // Embed editor to host
-    // On both Windows and Linux, there's an implementation within my modded GLFW.
-    // So they are empty functions now.
-    reparent_window(window, this->parentId);
-
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 }
 
+// TODO: Set a return value!
 void ImguiEditor::_setupImGui()
 {
     // Setup Dear ImGui context
@@ -105,8 +81,8 @@ void ImguiEditor::_setupImGui()
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Set actual editor UI size here
-    io.DisplaySize.x = (float) this->width;
-    io.DisplaySize.y = (float) this->height;
+    io.DisplaySize.x = (float)this->width;
+    io.DisplaySize.y = (float)this->height;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -138,9 +114,9 @@ void ImguiEditor::_drawLoop()
     }
 
     // Main loop
-    while (!glfwWindowShouldClose(window) && shouldEditorOn)
+    while (!glfwWindowShouldClose(window) && _running)
     {
-        ImGui::SetCurrentContext(myImGuiContext);
+        ImGui::SetCurrentContext(myImGuiContext); // Maybe unnecessary!
 
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -154,41 +130,44 @@ void ImguiEditor::_drawLoop()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+        // Draw windows
         {
-            static float f = 0.0f;
-            static int counter = 0;
+            // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+            if (show_demo_window)
+                ImGui::ShowDemoWindow(&show_demo_window);
 
-            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+            // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+            {
+                static float f = 0.0f;
+                static int counter = 0;
 
-            ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+                ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
+                ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
+                ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+                ImGui::Checkbox("Another Window", &show_another_window);
 
-            if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+                ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
+                ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
+                if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+                    counter++;
+                ImGui::SameLine();
+                ImGui::Text("counter = %d", counter);
 
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                ImGui::End();
+            }
+
+            // 3. Show another simple window.
+            if (show_another_window)
+            {
+                ImGui::Begin("Another Window", &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+                ImGui::Text("Hello from another window!");
+                if (ImGui::Button("Close Me"))
+                    show_another_window = false;
+                ImGui::End();
+            }
         }
 
         // Rendering
@@ -215,9 +194,8 @@ void ImguiEditor::_drawLoop()
         glfwSwapBuffers(window);
     }
 
-    // Remember to detach window, or host will freeze!
-    // Also handled within GLFW on Windows.
-    reparent_window_to_root(window);
+    auto inst_no = instance_counter.fetch_add(-1);
+    std::scoped_lock<std::mutex> lock(_init_lock);
 
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
@@ -226,37 +204,50 @@ void ImguiEditor::_drawLoop()
 
     glfwDestroyWindow(window);
 
-    auto inst_no = instance_counter.fetch_add(-1);
     if (inst_no <= 1)
     {
         glfwTerminate();
     }
 }
 
+// TODO: Set return value!
 void ImguiEditor::openEditor()
 {
-    shouldEditorOn = true;
-    //_drawLoop();
+    /* Handle situations when open_view is called on an already
+     * open editor or one that wasn't closed properly */
+    if (_running == true)
+    {
+        //return false;
+        return;
+    }
+    if (_update_thread.joinable())
+    {
+        _update_thread.join();
+    }
 
-    /**
-     * Create thread for editor.
-     * Actually, a non-static member can also be a thread function,
-     * but you need to use operator "&".
-     * Omitting "&" is OK on Msys2 MinGW-w64, but won't allowed on Linux.
-     */
-    editorThread = std::thread(&ImguiEditor::_drawLoop, this);
+    _running = true;
+    try
+    {
+        _update_thread = std::thread(&ImguiEditor::_drawLoop, this);
+    }
+    catch (std::exception &e)
+    {
+        //std::cerr << "Failed to start draw thread: " << e.what() << std::endl;
+        //return false;
+        return;
+    }
+
+    return;
 }
 
 void ImguiEditor::closeEditor()
 {
-    if (shouldEditorOn)
-    {
-        // Reparent window to root to avoid possible crashes
-        // Now this function is also handled within my modded GLFW.
-        //reparent_window_to_root(window);
+    //std::cout << "Closing window" << std::endl;
 
-        shouldEditorOn = false;
-        if (editorThread.joinable())
-            editorThread.join();
+    _running = false;
+
+    if (_update_thread.joinable())
+    {
+        _update_thread.join();
     }
 }
