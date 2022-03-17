@@ -268,13 +268,13 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 		case effGetPlugCategory:
 			return kPlugCategSynth;
 		case effGetEffectName:
-			strcpy((char *)ptr, "amsynth with ImGui");
+			strcpy((char *)ptr, "amsynth with Threaded UI Test");
 			return 1;
 		case effGetVendorString:
 			strcpy((char *)ptr, "Nick Dowell");
 			return 1;
 		case effGetProductString:
-			strcpy((char *)ptr, "amsynth");
+			strcpy((char *)ptr, "amsynth_thread");
 			return 1;
 		case effGetVendorVersion:
 			return 0;
@@ -374,7 +374,7 @@ AEffect * VSTPluginMain(audioMasterCallback audioMaster)
 #endif // WITH_GUI
 	// Do no use the ->user pointer because ardour clobbers it
 	effect->ptr3 = new Plugin(audioMaster);
-	effect->uniqueID = CCONST('a', 'm', 's', 'y');
+	effect->uniqueID = CCONST('a', 'm', 's', 't');
 	effect->processReplacing = processReplacing;
 	return effect;
 }
