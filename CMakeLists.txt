@@ -116,19 +116,6 @@ add_compile_options (-fPIC)
 
 
 #
-# Build my own GLFW
-#
-set(BUILD_SHARED_LIBS       OFF CACHE BOOL "")
-set(GLFW_BUILD_EXAMPLES     OFF CACHE BOOL "")
-set(GLFW_BUILD_TESTS        OFF CACHE BOOL "")
-set(GLFW_BUILD_DOCS         OFF CACHE BOOL "")
-set(GLFW_INSTALL            OFF CACHE BOOL "")
-set(GLFW_THREAD_LOCAL_DATA  ON  CACHE BOOL "")
-set(GLFW_VULKAN_STATIC      OFF CACHE BOOL "")
-add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/glfw)
-
-
-#
 # Core components
 #
 
@@ -327,17 +314,16 @@ if (CONFIG_VST_IMGUI)
         ${IMGUI_DIR}/imgui_draw.cpp
         ${IMGUI_DIR}/imgui_tables.cpp
         ${IMGUI_DIR}/imgui_widgets.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_opengl2.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_dx9.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_win32.cpp
     )
-    #add_library (imgui STATIC ${IMGUI_SRC})
-    #target_include_directories (imgui PRIVATE ${IMGUI_DIR})
 
     add_library (${PROJECT_NAME}_vst_imgui SHARED
         ${IMGUI_SRC}
         src/amsynth_vst_imgui.cpp
         vendor/vestige/aeffectx.h
         src/ImGui/editor_pane.cpp
+        src/ImGui/d3d_helper.cpp
     )
     target_include_directories (${PROJECT_NAME}_vst_imgui PRIVATE
         ${CMAKE_SOURCE_DIR}/vendor
@@ -347,28 +333,17 @@ if (CONFIG_VST_IMGUI)
     # Scope lock requires C++17
     target_compile_options (${PROJECT_NAME}_vst_imgui PRIVATE -std=c++17)
 
-    if (WIN32)
-        target_compile_definitions (${PROJECT_NAME}_vst_imgui PRIVATE GLFW_EXPOSE_NATIVE_WIN32=1)
-        set (OPENGL_LIBRARIES -lopengl32)       # Must link against opengl32 to avoid link error
-    else ()
-        target_compile_definitions (${PROJECT_NAME}_vst_imgui PRIVATE GLFW_EXPOSE_NATIVE_X11=1)
-        set (OPENGL_LIBRARIES -lGL)
-    endif ()
+    # Link against static C++ libs
+    target_link_options (${PROJECT_NAME}_vst_imgui PRIVATE -static-libgcc -static-libstdc++)
+
     target_link_libraries (${PROJECT_NAME}_vst_imgui PRIVATE
         ${PROJECT_NAME}_core
-        glfw
-        ${OPENGL_LIBRARIES}
-        #imgui
+        -ldwmapi -ld3d9 -ld3dx9_42 -ld3dcompiler_42 -lgdi32
     )
 
     # Disable "cast from 'gpointer' {aka 'void*'} to 'long int' loses precision" warning on Windows
     if (WIN32)
         target_compile_options (${PROJECT_NAME}_vst_imgui PRIVATE -fpermissive)
-    endif ()
-
-    # Must export VST main entry, or hosts won't recognize
-    if (NOT WIN32)
-        target_link_options (${PROJECT_NAME}_vst_imgui PUBLIC "-export-symbols-regex \"VSTPluginMain|main\"")
     endif ()
 endif ()
 

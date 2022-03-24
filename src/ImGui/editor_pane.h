@@ -1,6 +1,7 @@
+#pragma once
 #include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_opengl2.h>
+#include <imgui/backends/imgui_impl_dx9.h>
+#include <imgui/backends/imgui_impl_win32.h>
 #include <stdio.h>
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
@@ -9,18 +10,12 @@
 struct ImGuiContext;                              // Forward decls.
 extern thread_local ImGuiContext *myImGuiContext; // ImGui editor context. Should be global
 
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
+#include "d3d_helper.h"
 
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
 #include <thread>
 #include <mutex>
-#if _WIN32
-#include <windows.h>
-#else
-#include <X11/Xlib.h>
-#endif
 
 class ImguiEditor
 {
@@ -32,10 +27,11 @@ public:
     void closeEditor();
 
 private:
-    GLFWwindow *window;
+    WNDCLASSEX wc = {sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui Example"), NULL};;
+    HWND hwnd;
     void *parentId;
 
-    void _setupGLFW();
+    int _setupDX9();
     void _setupImGui();
     void _drawLoop();
 

@@ -7,15 +7,6 @@ thread_local ImGuiContext *myImGuiContext;
 std::mutex ImguiEditor::_init_lock;
 std::atomic<int> ImguiEditor::instance_counter = 0;
 
-// TODO: Implement cross-platform messagebox
-static void glfw_error_callback(int error, const char *description)
-{
-    fprintf(stderr, "Glfw Error %d: %s\n", error, description);
-#if _WIN32
-    MessageBoxA(NULL, (LPCSTR)description, "Error", MB_OK);
-#endif
-}
-
 ImguiEditor::ImguiEditor(void *parentId, int width, int height)
 {
     this->parentId = parentId;
@@ -28,43 +19,36 @@ ImguiEditor::~ImguiEditor()
 }
 
 // TODO: Set a return value!
-void ImguiEditor::_setupGLFW()
+int ImguiEditor::_setupDX9()
 {
-    /* Belt and braces! This refcount is mostly for the imgui-glfw backend.
-     * The refcounted initialization in the included glfw fork is useful
-     * when there are multiple plugins (not just multiple instances) using
-     * vstimgui */
+    /* Belt and braces! This refcount is mostly for the imgui-dx9 backend. */
     auto inst_no = instance_counter.fetch_add(1);
-    if (inst_no == 0)
+    //if (inst_no == 0)
     {
-        glfwSetErrorCallback(glfw_error_callback);
-        if (!glfwInit())
+        // Create application window
+        //ImGui_ImplWin32_EnableDpiAwareness();
+        ::RegisterClassEx(&wc);
+        DWORD style = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CHILD;
+        hwnd = ::CreateWindow(wc.lpszClassName, _T("Dear ImGui DirectX9 Example"), style, 100, 100, this->width, this->height, (HWND)this->parentId, NULL, wc.hInstance, NULL);
+
+        if (!CreateDeviceD3D(hwnd))
         {
-            return;
+            CleanupDeviceD3D();
+            ::UnregisterClass(wc.lpszClassName, wc.hInstance);
+
+            printf("******************* ERROR setupDX9: Cannot create device *******************\n");
+            return 1;
         }
-        /* Until this feature is done in glfw https://github.com/glfw/glfw/issues/25
-         * Open a glfw window and set it's native window a child of the host provided window */
     }
 
-    // Omit explicit version specification to let GLFW guess GL version,
-    // or GLFW will fail to load on old environments with GL 2.x
-#if 0
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-#endif
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // Do not allow resizing
-    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // Disable decoration. Or you will see a weird titlebar :-)
+    if (g_pd3dDevice == NULL)
+        printf("******************* ERROR setupDX9: g_pd3dDevice == NULL *******************\n");
 
-    // Enable embedded window
-    glfwWindowHint(GLFW_EMBEDDED_WINDOW, GLFW_TRUE);
-    glfwWindowHintVoid(GLFW_PARENT_WINDOW_ID, this->parentId);
+    // Show the window
+    ::ShowWindow(hwnd, SW_SHOWDEFAULT);
+    ::UpdateWindow(hwnd);
 
-    window = glfwCreateWindow(this->width, this->height, "Dear ImGui GLFW+OpenGL2 example", NULL, NULL); // This size is only the standalone window's size, NOT editor's size
-    if (window == NULL)
-        return;
-
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
+    return 0;
 }
 
 // TODO: Set a return value!
@@ -89,8 +73,11 @@ void ImguiEditor::_setupImGui()
     //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL2_Init();
+    ImGui_ImplWin32_Init(hwnd);
+
+    if (g_pd3dDevice == NULL)
+        printf("******************* ERROR setupImgui: g_pd3dDevice == NULL *******************\n");
+    ImGui_ImplDX9_Init(g_pd3dDevice);
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -109,25 +96,34 @@ void ImguiEditor::_drawLoop()
 {
     {
         std::scoped_lock<std::mutex> lock(_init_lock);
-        _setupGLFW();
+        _setupDX9();
         _setupImGui();
     }
 
     // Main loop
-    while (!glfwWindowShouldClose(window) && _running)
+    while (!_running)
     {
         ImGui::SetCurrentContext(myImGuiContext); // Maybe unnecessary!
 
-        // Poll and handle events (inputs, window resize, etc.)
+        // Poll and handle messages (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
         // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-        glfwPollEvents();
+        MSG msg;
+        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+        {
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
+            if (msg.message == WM_QUIT)
+                _running = false;
+        }
+        if (!_running)
+            break;
 
         // Start the Dear ImGui frame
-        ImGui_ImplOpenGL2_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplDX9_NewFrame();
+        ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
         // Draw windows
@@ -171,42 +167,37 @@ void ImguiEditor::_drawLoop()
         }
 
         // Rendering
-        ImGui::Render();
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        ImGui::EndFrame();
+        g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
+        g_pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+        g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+        D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clear_color.x * clear_color.w * 255.0f), (int)(clear_color.y * clear_color.w * 255.0f), (int)(clear_color.z * clear_color.w * 255.0f), (int)(clear_color.w * 255.0f));
+        g_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, clear_col_dx, 1.0f, 0);
+        if (g_pd3dDevice->BeginScene() >= 0)
+        {
+            ImGui::Render();
+            ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+            g_pd3dDevice->EndScene();
+        }
+        HRESULT result = g_pd3dDevice->Present(NULL, NULL, NULL, NULL);
 
-        //ImGuiIO &io = ImGui::GetIO();
-        //glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // If you are using this code with non-legacy OpenGL header/contexts (which you should not, prefer using imgui_impl_opengl3.cpp!!),
-        // you may need to backup/reset/restore other state, e.g. for current shader using the commented lines below.
-        //GLint last_program;
-        //glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
-        //glUseProgram(0);
-        ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-        //glUseProgram(last_program);
-
-        glfwMakeContextCurrent(window);
-        glfwSwapBuffers(window);
+        // Handle loss of D3D9 device
+        if (result == D3DERR_DEVICELOST && g_pd3dDevice->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)
+            ResetDevice();
     }
 
     auto inst_no = instance_counter.fetch_add(-1);
     std::scoped_lock<std::mutex> lock(_init_lock);
 
-    // Cleanup
-    ImGui_ImplOpenGL2_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext(myImGuiContext);
-
-    glfwDestroyWindow(window);
+    ImGui_ImplDX9_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
 
     if (inst_no <= 1)
     {
-        glfwTerminate();
+        CleanupDeviceD3D();
+        ::DestroyWindow(hwnd);
+        ::UnregisterClass(wc.lpszClassName, wc.hInstance);
     }
 }
 
