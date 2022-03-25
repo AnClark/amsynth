@@ -174,7 +174,7 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 
 #ifdef WITH_GUI
 		case effEditGetRect: {
-			static ERect rect = {0, 0, 720, 1280};
+			static ERect rect = {0, 0, 480, 800};
 			ERect **er = (ERect **)ptr;
 			*er = &rect;
 			return 1;
@@ -183,7 +183,7 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			// TODO: Check openEditor()'s return value in case error occur
 			//       so that it can give user a feedback
 			if (!plugin->editorInstance) {
-				plugin->editorInstance = new ImguiEditor(ptr, 1280, 720);
+				plugin->editorInstance = new ImguiEditor(ptr, 800, 480);
 				plugin->editorInstance->openEditor();
 			}
 			return 1;

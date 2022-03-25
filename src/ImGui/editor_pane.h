@@ -26,8 +26,13 @@ public:
     void openEditor();
     void closeEditor();
 
+    static LPDIRECT3D9 g_pD3D;
+    static LPDIRECT3DDEVICE9 g_pd3dDevice;
+    static D3DPRESENT_PARAMETERS g_d3dpp;
+
 private:
-    WNDCLASSEX wc = {sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui Example"), NULL};;
+    WNDCLASSEX wc = {sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui Example"), NULL};
+    ;
     HWND hwnd;
     void *parentId;
 
