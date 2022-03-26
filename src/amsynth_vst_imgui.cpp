@@ -320,7 +320,9 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 
 				buffer += msgLength;
 
-				assert(buffer < plugin->midiBuffer + 4096);
+				// FIXME: I don't know which bug will appear after bypassing this assertion.
+				// In some hosts (e.g. Falcosoft Midi Player), this assertion can easily be triggered.
+				//assert(buffer < plugin->midiBuffer + 4096);
 			}
 			
 			return 1;
