@@ -18,6 +18,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with amsynth.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma once
 
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
@@ -111,4 +112,77 @@ private:
     double paramDefaultValues[kAmsynthParameterCount] = {0.0f}; // NOTICE: Currently unnecessary, because DSP side will automatically
                                                                 //         apply default values when needed
     double paramStepSizes[kAmsynthParameterCount] = {0.0f};     // NOTICE: step_increment is not supported by ImGui
+
+    // Controllers
+
+    void _AmsynthControl_AmpEnvAttack();
+    void _AmsynthControl_AmpEnvDecay();
+    void _AmsynthControl_AmpEnvSustain();
+    void _AmsynthControl_AmpEnvRelease();
+
+    void _AmsynthControl_Oscillator1Waveform();
+
+    void _AmsynthControl_FilterEnvAttack();
+    void _AmsynthControl_FilterEnvDecay();
+    void _AmsynthControl_FilterEnvSustain();
+    void _AmsynthControl_FilterEnvRelease();
+    void _AmsynthControl_FilterResonance();
+    void _AmsynthControl_FilterEnvAmount();
+    void _AmsynthControl_FilterCutoff();
+
+    void _AmsynthControl_Oscillator2Detune();   // OSC2 detune
+    void _AmsynthControl_Oscillator2Waveform(); // OSC2 waveform
+
+    void _AmsynthControl_MasterVolume(); // Main volume
+
+    void _AmsynthControl_LFOFreq();     // LFO frequency (speed)
+    void _AmsynthControl_LFOWaveform(); // LFO waveform
+
+    void _AmsynthControl_Oscillator2Octave();
+    void _AmsynthControl_OscillatorMix();
+
+    void _AmsynthControl_LFOToOscillators(); // Freq Mod Amount
+    void _AmsynthControl_LFOToFilterCutoff();
+    void _AmsynthControl_LFOToAmp();
+
+    void _AmsynthControl_OscillatorMixRingMod();
+
+    void _AmsynthControl_Oscillator1Pulsewidth();
+    void _AmsynthControl_Oscillator2Pulsewidth();
+
+    void _AmsynthControl_ReverbRoomsize();
+    void _AmsynthControl_ReverbDamp();
+    void _AmsynthControl_ReverbWet();
+    void _AmsynthControl_ReverbWidth();
+
+    void _AmsynthControl_AmpDistortion();
+
+    void _AmsynthControl_Oscillator2Sync();
+
+    void _AmsynthControl_PortamentoTime();
+
+    void _AmsynthControl_KeyboardMode();
+
+    void _AmsynthControl_Oscillator2Pitch();
+    void _AmsynthControl_FilterType();
+    void _AmsynthControl_FilterSlope();
+
+    void _AmsynthControl_LFOOscillatorSelect();
+
+    void _AmsynthControl_FilterKeyTrackAmount();
+    void _AmsynthControl_FilterKeyVelocityAmount();
+
+    void _AmsynthControl_AmpVelocityAmount();
+
+    void _AmsynthControl_PortamentoMode();
+
+    void _AmsynthControl_Oscilloscope();
+
+    // Sub window / panel
+
+    void _AmsynthWindow_Preset();
 };
+
+// Toolings
+
+int mini_hash(char *str); // Calculate string hash
