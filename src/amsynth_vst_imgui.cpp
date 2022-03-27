@@ -269,7 +269,8 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			if (!plugin->editorInstance) {
 				plugin->editorInstance = new ImguiEditor(ptr, WINDOW_WIDTH, WINDOW_HEIGHT, plugin->synthesizer);
 				plugin->editorInstance->setParamChangeCallback(on_adjustment_value_changed, effect);
-				plugin->editorInstance->openEditor();
+				if (plugin->editorInstance->openEditor() != 0)	// 0 means successful
+					return 0;
 			}
 			return 1;
 		}
