@@ -159,9 +159,19 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			// Stop all sound before applying preset
 			panic_on_dsp_side(effect);
 
+			// Program #0 is reserved for default / user-defined presets.
+			// Do not apply factory program at this time.
+			if (val <= 0) {
+				plugin->presetName = "Initial";
+				plugin->programNumber = 0;
+				return 1;
+			}
+
 			// Obtain bank and preset
-			auto &bank = PresetController::getPresetBanks().at(val / kPresetsPerBank);
-			auto &preset = bank.presets[val % kPresetsPerBank];
+			// The corresponding factory program index is just by one item before host's index.
+			int actual_index = val >= 1 ? val - 1 : 0;	// In case of possible error
+			auto &bank = PresetController::getPresetBanks().at(actual_index / kPresetsPerBank);
+			auto &preset = bank.presets[actual_index % kPresetsPerBank];
 
 			// Keep current preset name / index via our own variables
 			plugin->presetName = preset.getName();
@@ -199,12 +209,24 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			// Host will query every built-in program by invoking effGetProgramNameIndexed.
 			// @param index: The program index where the host queries
 
+			// Reserve program #0 as default/customized program as "Initial",
+			// so that users can load user-defined presets from host instead of always being redirected to factory program #0.
+			// NOTE: Hosts like REAPER will set index to 0 when loading user-defined presets.
+			if (index <= 0) {
+				strncpy((char *)ptr, "-- Init / User --", 24);
+				return 1;
+			}
+
 			// Check if there were preset files or not
 			// If you don't check, host will crash if no preset was installed
 			if (PresetController::getPresetBanks().size()) {
+				// As #0 is "Initial", other factory programs should be put into the next hole.
+				// "index" is host's display index, and "actual_index" is the corresponding bank's index.
+				int actual_index = index - 1;
+
 				// Obtain bank and preset
-				auto &bank = PresetController::getPresetBanks().at(index / kPresetsPerBank);
-				auto &preset = bank.presets[index % kPresetsPerBank];
+				auto &bank = PresetController::getPresetBanks().at(actual_index / kPresetsPerBank);
+				auto &preset = bank.presets[actual_index % kPresetsPerBank];
 
 				// Set current obtained preset name, then show the name on host
 				plugin->presetName = preset.getName();
