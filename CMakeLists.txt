@@ -386,6 +386,8 @@ if (CONFIG_VST_IMGUI)
         ${IMGUI_ADDON_SRC}
         src/amsynth_vst_imgui.cpp
         vendor/vestige/aeffectx.h
+        src/ImGui/editor_control.cpp
+        src/ImGui/subwindow.cpp
         src/ImGui/editor_pane.cpp
     )
     target_include_directories (${PROJECT_NAME}_vst_imgui PRIVATE
