@@ -58,13 +58,17 @@
 
 typedef void (*ParamChangeCallback) (float[], AEffect *);
 
+// Error code
+#define ERR_GLFW_FAILURE 1
+#define ERR_IMGUI_FAILURE 2
+
 class ImguiEditor
 {
 public:
     ImguiEditor(void *parentId, int width, int height, Synthesizer *synthInstance);
     ~ImguiEditor();
 
-    void openEditor();
+    int openEditor();
     void closeEditor();
     void drawFrame();
 
@@ -78,8 +82,8 @@ private:
     ImGuiContext *myImGuiContext = nullptr;
     void *parentId;
 
-    void _setupGLFW();
-    void _setupImGui();
+    int _setupGLFW();
+    int _setupImGui();
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);

@@ -150,7 +150,7 @@ void ImguiEditor::setCurrentSample(int numSamples, float *samples)
     this->currentSample = samples;
 }
 
-void ImguiEditor::_setupGLFW()
+int ImguiEditor::_setupGLFW()
 {
     /**
      * Setup window as well as initialized count.
@@ -164,7 +164,7 @@ void ImguiEditor::_setupGLFW()
     {
         glfwSetErrorCallback(glfw_error_callback);
         if (!glfwInit())
-            return;
+            return GLFW_FALSE;
     }
 
     // Omit explicit version specification to let GLFW guess GL version,
@@ -182,7 +182,7 @@ void ImguiEditor::_setupGLFW()
 
     window = glfwCreateWindow(this->width, this->height, "Dear ImGui GLFW+OpenGL2 example", NULL, NULL); // This size is only the standalone window's size, NOT editor's size
     if (window == NULL)
-        return;
+        return GLFW_FALSE;
 
     // Embed editor to host
     // On both Windows and Linux, there's an implementation within my modded GLFW.
@@ -194,9 +194,11 @@ void ImguiEditor::_setupGLFW()
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+
+    return GLFW_TRUE;
 }
 
-void ImguiEditor::_setupImGui()
+int ImguiEditor::_setupImGui()
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -226,6 +228,8 @@ void ImguiEditor::_setupImGui()
      * To change font, set the CMake varible INCLUDED_FONT */
     ImFontConfig config;
     io.Fonts->AddFontFromMemoryCompressedTTF(font_compressed_data, font_compressed_size, 16, &config);
+
+    return GLFW_TRUE;
 }
 
 void ImguiEditor::drawFrame()
@@ -784,10 +788,15 @@ void ImguiEditor::drawFrame()
     }
 }
 
-void ImguiEditor::openEditor()
+int ImguiEditor::openEditor()
 {
-    _setupGLFW();
-    _setupImGui();
+    if (!_setupGLFW())
+        return ERR_GLFW_FAILURE;
+
+    if (!_setupImGui())
+        return ERR_IMGUI_FAILURE;
+
+    return 0;
 }
 
 void ImguiEditor::closeEditor()
