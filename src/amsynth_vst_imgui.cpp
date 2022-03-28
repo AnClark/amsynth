@@ -101,6 +101,7 @@ struct Plugin
 	std::vector<amsynth_midi_event_t> midiEvents;
 	int programNumber = 0;
 	std::string presetName;
+	bool userPresetLoaded = false;	// Mark if host is loading a user preset
 #ifdef WITH_GUI
 	ImguiEditor *editorInstance;
 #endif
@@ -164,6 +165,23 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			if (val <= 0) {
 				plugin->presetName = "Initial";
 				plugin->programNumber = 0;
+
+				// Remember to reset switch. Otherwise, after a factory reset, host will
+				// set to "initial" program at once when choosing a factory program
+				plugin->userPresetLoaded = false;
+				return 1;
+			}
+
+			// But, some hosts won't set program number to 0 when loading user presets,
+			// for example, REAPER for linux.
+			// They will call effSetChunk at that time. So, set a switch when calling it
+			// so that we can know if host is loading user presets.
+			if (plugin->userPresetLoaded) {
+				plugin->presetName = "User defined";
+				plugin->programNumber = 0;
+
+				// Remember to reset switch, or factory presets won't load
+				plugin->userPresetLoaded = false;
 				return 1;
 			}
 
@@ -211,7 +229,9 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 
 			// Reserve program #0 as default/customized program as "Initial",
 			// so that users can load user-defined presets from host instead of always being redirected to factory program #0.
+			//
 			// NOTE: Hosts like REAPER will set index to 0 when loading user-defined presets.
+			//       But some hosts don't. See "case effSetProgram" for another polyfill.
 			if (index <= 0) {
 				strncpy((char *)ptr, "-- Init / User --", 24);
 				return 1;
@@ -297,6 +317,7 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 
 		case effSetChunk:
 			plugin->synthesizer->loadState((char *)ptr);
+			plugin->userPresetLoaded = true;	// Mark that we have loaded user preset from host 
 			return 0;
 
 		case effProcessEvents: {
