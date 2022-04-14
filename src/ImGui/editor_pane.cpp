@@ -240,9 +240,16 @@ void ImguiEditor::drawFrame()
     // Called once per idle slice
     // Remember to check myImGuiContext before drawing frames, or ImGui_ImplOpenGL2_NewFrame() may execute
     // on an empty context after closeEditor()!
-    if (myImGuiContext)
+    //
+    // UPDATE 2022-4-14: 
+    // - myImGuiContext WILL NOT be null when assertion raises.
+    // - In fact, this check cannot prevent assertion errors, since effEditClose can be invoked
+    //   just after this check.
+    // - Solution is to replace ImGui_ImplOpenGL2_NewFrame() with hacked ImGui_ImplOpenGL2_NewFrame_NoAssert().
+    if (ImGui::GetCurrentContext())
     {
-        ImGui::SetCurrentContext(myImGuiContext);
+        // May not take actual effect, because ImGui sets context automatically
+        //ImGui::SetCurrentContext(myImGuiContext);
 
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -252,7 +259,11 @@ void ImguiEditor::drawFrame()
         glfwPollEvents();
 
         // Start the Dear ImGui frame
-        ImGui_ImplOpenGL2_NewFrame();
+        // Here I use a special workaround of ImGui_ImplOpenGL2_NewFrame().
+        // Go to vendor/imgui_workarounds/backends for details.
+        if (!ImGui_ImplOpenGL2_NewFrame_NoAssert())
+            return;
+
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 

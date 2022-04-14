@@ -378,12 +378,19 @@ if (CONFIG_VST_IMGUI)
         vendor/imgui_addons/zynlab
         vendor/imgui_addons/anclark
     )
+    set (IMGUI_WORKAROUND_SRC
+        vendor/imgui_workarounds/backends/imgui_opengl2_newframe.cpp
+    )
+    set (IMGUI_WORKAROUND_INCLUDE_DIR
+        vendor/imgui_workarounds/backends
+    )
     #add_library (imgui STATIC ${IMGUI_SRC})
     #target_include_directories (imgui PRIVATE ${IMGUI_DIR})
 
     add_library (${PROJECT_NAME}_vst_imgui SHARED
         ${IMGUI_SRC}
         ${IMGUI_ADDON_SRC}
+        ${IMGUI_WORKAROUND_SRC}
         src/amsynth_vst_imgui.cpp
         vendor/vestige/aeffectx.h
         src/ImGui/editor_control.cpp

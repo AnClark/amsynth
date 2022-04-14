@@ -36,6 +36,9 @@
 #include <imgui_addons/anclark/imgui_extra_button.h>
 #include <imgui_addons/anclark/imgui_oscilloscope.h>
 
+/** ImGui workarounds */
+#include <imgui_workarounds/backends/imgui_opengl2_newframe.h>
+
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
 #include <thread>
