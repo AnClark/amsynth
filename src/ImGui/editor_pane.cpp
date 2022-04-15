@@ -125,11 +125,11 @@ static void glfw_error_callback(int error, const char *description)
 }
 
 ImguiEditor::ImguiEditor(void *parentId, int width, int height, Synthesizer *synthInstance)
+    : parentId(parentId),
+      width(width),
+      height(height),
+      synthInstance(synthInstance)
 {
-    this->parentId = parentId;
-    this->width = width;
-    this->height = height;
-    this->synthInstance = synthInstance;
 }
 
 ImguiEditor::~ImguiEditor()
