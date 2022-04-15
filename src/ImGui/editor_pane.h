@@ -178,8 +178,8 @@ private:
 
     void _AmsynthControl_Oscilloscope();
 
-    // Sub window / panel
-
+    // Window / panel
+    void _AmsynthWindow_Main();
     void _AmsynthWindow_Preset();
 };
 

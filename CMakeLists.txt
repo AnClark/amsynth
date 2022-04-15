@@ -387,6 +387,7 @@ if (CONFIG_VST_IMGUI)
         src/amsynth_vst_imgui.cpp
         vendor/vestige/aeffectx.h
         src/ImGui/editor_control.cpp
+        src/ImGui/mainwindow.cpp
         src/ImGui/subwindow.cpp
         src/ImGui/editor_pane.cpp
     )
