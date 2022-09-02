@@ -41,15 +41,18 @@ public:
     void closeEditor();
     void drawFrame();
 
+    void setupGLFW();
+    void setupImGui();
+
     void setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance);
+
+    GLFWwindow *getWindow() { return this->window; }
+    ImGuiContext *getImguiContext() { return this->myImGuiContext; }
 
 private:
     GLFWwindow *window;
     ImGuiContext *myImGuiContext = nullptr;
     void *parentId;
-
-    void _setupGLFW();
-    void _setupImGui();
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -67,3 +70,5 @@ private:
     void _getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size);
     void _getParamValues();
 };
+
+static void imgui_drawing_thread(ImguiEditor *editorInstance);
