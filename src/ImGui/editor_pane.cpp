@@ -151,8 +151,8 @@ void ImguiEditor::setupGLFW()
     // So they are empty functions now.
     reparent_window(window, this->parentId);
 
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
+    // Explicitly set window position to avoid occasional misplace (offset)
+    glfwSetWindowPos(window, 0, 0);
 }
 
 /**
