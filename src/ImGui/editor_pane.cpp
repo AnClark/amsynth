@@ -24,6 +24,8 @@
 
 static int glfw_initialized_cnt;
 
+std::thread drawingThread;
+
 /**
  * Calculate string hash.
  * Reference: https://www.cnblogs.com/moyujiang/p/11213535.html
@@ -135,7 +137,13 @@ ImguiEditor::ImguiEditor(void *parentId, int width, int height, Synthesizer *syn
 ImguiEditor::~ImguiEditor()
 {
     // Destroy editor instance
-    closeEditor();
+    /**
+     * NOTICE: DO NOT CALL closeEditor() MORE THAN ONCE,
+     *         otherwise GLFW will throw "The GLFW library is not initialized" error.
+     *         Sometimes ohter errors will also occur. They can crush your DAW!
+     */
+    if (window || myImGuiContext)
+        closeEditor();
 }
 
 void ImguiEditor::setParamChangeCallback(ParamChangeCallback func, AEffect *effInstance)
@@ -150,7 +158,11 @@ void ImguiEditor::setCurrentSample(int numSamples, float *samples)
     this->currentSample = samples;
 }
 
-int ImguiEditor::_setupGLFW()
+/**
+ * Setup GLFW instance.
+ * Must be executed under the main thread.
+ */
+int ImguiEditor::setupGLFW()
 {
     /**
      * Setup window as well as initialized count.
@@ -192,14 +204,31 @@ int ImguiEditor::_setupGLFW()
     // Explicitly set window position to avoid occasional misplace (offset)
     glfwSetWindowPos(window, 0, 0);
 
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
-
     return GLFW_TRUE;
 }
 
-int ImguiEditor::_setupImGui()
+/**
+ * Setup ImGui instance.
+ * Must be executed under the drawing thread.
+ */
+int ImguiEditor::setupImGui()
 {
+    /**
+     * The following two functions MUST be executed under the drawing thread.
+     * Because only one thread can access the current GLFW context at a time.
+     *
+     * When you call glfwMakeContextCurrent() in main thread, it will take over
+     * the context. So if you then call it in drawing thread, GLFW will throw
+     * an error:
+     *     Glfw Error聽65544: WGL: Failed to make context current:
+     *                             The requested resource is in use.
+     *
+     * What's more, glfwSwapInterval() requires valid current context, otherwise
+     * it won't work.
+     */
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Enable vsync
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     myImGuiContext = ImGui::CreateContext();
@@ -237,7 +266,7 @@ void ImguiEditor::drawFrame()
     // Get current parameter names, values and properties
     _getAllParameters();
 
-    // Called once per idle slice
+    // The main drawing process
     // Remember to check myImGuiContext before drawing frames, or ImGui_ImplOpenGL2_NewFrame() may execute
     // on an empty context after closeEditor()!
     if (myImGuiContext)
@@ -279,6 +308,8 @@ void ImguiEditor::drawFrame()
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         //glUseProgram(last_program);
 
+        // Let GLFW render our UI
+        // Omitting those two function calls will end up with a blank window.
         glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
     }
@@ -286,31 +317,63 @@ void ImguiEditor::drawFrame()
 
 int ImguiEditor::openEditor()
 {
-    if (!_setupGLFW())
+    // Initialize GLFW in main thread
+    if (!setupGLFW())
         return ERR_GLFW_FAILURE;
 
-    if (!_setupImGui())
-        return ERR_IMGUI_FAILURE;
+    // Launch drawing thread
+    drawingThread = std::thread(imgui_drawing_thread, this);
 
     return 0;
 }
 
 void ImguiEditor::closeEditor()
 {
+    // Ask drawing thread to stop renderer loop
+    glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+    // Block main thread until drawing thread finishes
+    if (drawingThread.joinable())
+        drawingThread.join();
+
+    // OK, now let's clean up GLFW instance
     if (myImGuiContext)
     {
-        // Set current context to make sure that the following two shutdown functions
-        // can be in right context
-        ImGui::SetCurrentContext(myImGuiContext);
-
-        // Cleanup
-        ImGui_ImplOpenGL2_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext(myImGuiContext);
         myImGuiContext = nullptr;
 
         glfwDestroyWindow(window);
         if (!--glfw_initialized_cnt)
             glfwTerminate();
+
+        // Manually reset the pointer of GLFW window
+        // glfwDestroyWindow() invokes free(), but free() won't reset pointer to NULL.
+        // By reset, the destructor can determine if it needs to call closeWindow() in case user forgets.
+        window = nullptr;
     }
+}
+
+/**
+ * The drawing thread function.
+ * It should be a global function rather than a class member.
+ *
+ * @param editor The active editor instance.
+ */
+static void imgui_drawing_thread(ImguiEditor *editor)
+{
+    // Setup ImGui
+    editor->setupImGui();
+
+    // Render UI
+    while (!glfwWindowShouldClose(editor->getWindow())) {
+        editor->drawFrame();
+    }
+
+    // Set current context to make sure that the following two shutdown functions
+    // can be in right context
+    ImGui::SetCurrentContext(editor->getImGuiContext());
+
+    // Cleanup
+    ImGui_ImplOpenGL2_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext(editor->getImGuiContext());
 }

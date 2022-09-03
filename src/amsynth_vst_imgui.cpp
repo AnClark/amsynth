@@ -304,10 +304,13 @@ static intptr_t dispatcher(AEffect *effect, int opcode, int index, intptr_t val,
 			return 0;
 		}
 		case effEditIdle: {
-			// Draw UI on every idle piece
-			if (plugin->editorInstance) {
-				plugin->editorInstance->drawFrame();
-			}
+			/**
+			 * NOTICE: 
+			 * Since UI drawing is in a dedicated drawing thread, no need to handle effEditIdle.
+			 *
+			 * Also, GLFW event polling is also in drawing thread, and VST main process is event-driven,
+			 * so no need to execute glfwWaitEvents().
+			 */
 			return 1;
 		}
 #endif

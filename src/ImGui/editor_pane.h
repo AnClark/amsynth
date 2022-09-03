@@ -78,13 +78,17 @@ public:
 
     void setCurrentSample(int numSamples, float *samples);
 
+    // Used in drawing thread
+    int setupGLFW();
+    int setupImGui();
+
+    GLFWwindow *getWindow() { return this->window; }
+    ImGuiContext *getImGuiContext() { return this->myImGuiContext; }
+
 private:
     GLFWwindow *window;
     ImGuiContext *myImGuiContext = nullptr;
     void *parentId;
-
-    int _setupGLFW();
-    int _setupImGui();
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -182,6 +186,9 @@ private:
     void _AmsynthWindow_Main();
     void _AmsynthWindow_Preset();
 };
+
+// The drawing thread function
+static void imgui_drawing_thread(ImguiEditor *editorInstance);
 
 // Toolings
 
