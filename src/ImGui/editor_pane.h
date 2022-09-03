@@ -35,6 +35,7 @@
 #include <imgui_addons/zynlab/imgui_knob.h>
 #include <imgui_addons/anclark/imgui_extra_button.h>
 #include <imgui_addons/anclark/imgui_oscilloscope.h>
+#include <imgui_addons/imgui-knobs/imgui-knobs.h>
 
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
