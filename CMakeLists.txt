@@ -392,6 +392,7 @@ if (CONFIG_VST_IMGUI)
         src/ImGui/mainwindow.cpp
         src/ImGui/subwindow.cpp
         src/ImGui/editor_pane.cpp
+        src/ImGui/glfw_callbacks.cpp
     )
     target_include_directories (${PROJECT_NAME}_vst_imgui PRIVATE
         ${CMAKE_SOURCE_DIR}/vendor

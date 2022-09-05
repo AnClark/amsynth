@@ -189,6 +189,15 @@ private:
     // Window / panel
     void _AmsynthWindow_Main();
     void _AmsynthWindow_Preset();
+
+    // GLFW Callbacks
+    void _setMyGLFWCallbacks();
+
+    void _charCallback(unsigned int c);
+    void _cursorEnterCallback(int entered);
+    void _mouseButtonCallback(int button, int action, int mods);
+    void _scrollCallback(double xoffset, double yoffset);
+    void _keyCallback(int key, int scancode, int action, int mods);
 };
 
 // The drawing thread function
