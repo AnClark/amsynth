@@ -400,6 +400,10 @@ if (CONFIG_VST_IMGUI)
     )
     add_dependencies (${PROJECT_NAME}_vst_imgui generate_font)
 
+    # Include my own ImGui config
+    # Mainly contains workaround for thread-safety
+    add_compile_definitions(${PROJECT_NAME}_vst_imgui PRIVATE IMGUI_USER_CONFIG="${CMAKE_SOURCE_DIR}/src/ImGui/imconfig.h")
+
     # Scope lock requires C++17
     target_compile_options (${PROJECT_NAME}_vst_imgui PRIVATE -std=c++17)
 
