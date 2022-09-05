@@ -358,6 +358,7 @@ if (CONFIG_VST_IMGUI)
         src/amsynth_vst_imgui.cpp
         vendor/vestige/aeffectx.h
         src/ImGui/editor_pane.cpp
+        src/ImGui/glfw_callbacks.cpp
     )
     target_include_directories (${PROJECT_NAME}_vst_imgui PRIVATE
         ${CMAKE_SOURCE_DIR}/vendor
