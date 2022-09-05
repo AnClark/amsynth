@@ -50,6 +50,9 @@ public:
     ImGuiContext *getImguiContext() { return this->myImGuiContext; }
 
 private:
+    // Each editor instance has its own drawing thread instance
+    std::thread drawingThread;
+
     GLFWwindow *window;
     ImGuiContext *myImGuiContext = nullptr;
     void *parentId;
