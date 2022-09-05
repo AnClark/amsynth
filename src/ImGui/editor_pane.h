@@ -109,8 +109,8 @@ private:
     ParamChangeCallback _onParamChange;
 
     // Data for oscilloscope
-    int numCurrentSample;
-    float *currentSample;
+    int numCurrentSample = 0;
+    float *currentSample = nullptr;
 
     // Parameter properties
     void _getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size);
