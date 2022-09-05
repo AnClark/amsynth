@@ -67,3 +67,5 @@ tmp/**
 .backup
 *.orig
 *.rej
+.cache/**
+imgui.ini
