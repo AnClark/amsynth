@@ -44,7 +44,8 @@ void ImguiEditor::_AmsynthWindow_Main()
      */
 
     // Fullscreen window parameters
-    static ImGuiWindowFlags flagsMainWindow = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
+    static ImGuiWindowFlags flagsMainWindow = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+                                              ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
@@ -56,15 +57,42 @@ void ImguiEditor::_AmsynthWindow_Main()
 
     // Section 01: OSC1
     {
-        ImGui::BeginGroup();
-        ImGui::Text("OSC 1");
+        ImGui::BeginChild("OSC1", ImVec2(200, 150), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("OSC 1");
+            ImGui::EndMenuBar();
+        }
+
+        // Placeholder
+        ImGui::Text("");
+        ImGui::SameLine(0, 5);
 
         _AmsynthControl_Oscillator1Waveform(); // Waveform Switch
-        ImGui::SameLine();
+        ImGui::SameLine(0, 20);
 
         _AmsynthControl_Oscillator1Pulsewidth(); // Shape (Pulse Width)
 
-        ImGui::EndGroup();
+        ImGui::EndChild();
+    }
+
+    ImGui::SameLine();
+    // TODO: Put OSC Mix together with AMP? -> "OSC/Master Mix"
+    // Section 05: OSC Mix
+    {
+        ImGui::BeginChild("OSC Mix", ImVec2(200, 150), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("OSC Mix");
+            ImGui::EndMenuBar();
+        }
+
+        _AmsynthControl_OscillatorMix();
+        ImGui::SameLine(0, 20);
+
+        _AmsynthControl_OscillatorMixRingMod();
+
+        ImGui::EndChild();
     }
 
     // Section 01.5: Oscilloscope
@@ -73,195 +101,217 @@ void ImguiEditor::_AmsynthWindow_Main()
 
     // Section 02: OSC2
     {
-        ImGui::BeginGroup();
-        ImGui::Text("OSC 2");
+        ImGui::BeginChild("OSC2", ImVec2(400, 150), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("OSC 2");
+
+            // "Sync to OSC1" switch
+            _AmsynthControl_Oscillator2Sync();
+            ImGui::EndMenuBar();
+        }
+
+        // Placeholder
+        ImGui::Text("");
+        ImGui::SameLine(0, 5);
 
         // Waveform Switch
         _AmsynthControl_Oscillator2Waveform();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 20);
 
         // Shape (Pulse Width)
         _AmsynthControl_Oscillator2Pulsewidth();
-        ImGui::SameLine();
-
-        // "Sync to OSC1" switch
-        _AmsynthControl_Oscillator2Sync();
-
-        ImGui::EndGroup();
-    }
-
-    // Section 03: Tune for OSC 2
-    {
-        ImGui::BeginGroup();
-        ImGui::Text("Tune for OSC 2");
+        ImGui::SameLine(0, 20);
 
         // Octave
         _AmsynthControl_Oscillator2Octave();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 20);
 
         // Semitone
         _AmsynthControl_Oscillator2Pitch();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 20);
 
         // Detune
         _AmsynthControl_Oscillator2Detune();
 
-        ImGui::EndGroup();
+        ImGui::EndChild();
     }
 
     // Section 04: AMP Envelope
     {
-        ImGui::BeginGroup();
-        ImGui::Text("AMP Envelope");
+        ImGui::BeginChild("AMP_Envelope", ImVec2(400, 150), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("AMP Envelope");
+            ImGui::EndMenuBar();
+        }
 
         _AmsynthControl_AmpEnvAttack();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 20);
 
         _AmsynthControl_AmpEnvDecay();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 20);
 
         _AmsynthControl_AmpEnvSustain();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 20);
 
         _AmsynthControl_AmpEnvRelease();
-        ImGui::EndGroup();
+        ImGui::EndChild();
     }
 
-    ImGui::SameLine();
-
-    // Section 05: OSC Mix
-    {
-        ImGui::BeginGroup();
-        ImGui::Text("OSC Mix");
-
-        _AmsynthControl_OscillatorMix();
-        ImGui::SameLine();
-
-        _AmsynthControl_OscillatorMixRingMod();
-
-        ImGui::EndGroup();
-    }
+    // ImGui::SameLine();
 
     ImGui::SameLine();
 
     // Section 06: AMP Volume / Drive
     {
-        ImGui::BeginGroup();
-        ImGui::Text("AMP");
+        ImGui::BeginChild("AMP", ImVec2(200, 150), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("AMP");
+            ImGui::EndMenuBar();
+        }
 
         _AmsynthControl_MasterVolume();
         ImGui::SameLine();
 
         _AmsynthControl_AmpDistortion();
 
-        ImGui::EndGroup();
+        ImGui::EndChild();
     }
 
     // Section: LFO
     {
-        ImGui::BeginGroup();
-        ImGui::Text("LFO");
-        ImGui::SameLine(0, 90);
+        ImGui::BeginChild("LFO", ImVec2(600, 150), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("LFO");
+            ImGui::SameLine(0, 100);
+
+            // LFO OSC selector
+            ImGui::Text("Apply to → ");
+            _AmsynthControl_LFOOscillatorSelect();
+
+            ImGui::EndMenuBar();
+        }
 
         // LFO Waveform Switch
         _AmsynthControl_LFOWaveform();
         ImGui::SameLine(0, 40);
 
-        // LFO OSC selector
-        _AmsynthControl_LFOOscillatorSelect();
-
         // Frequency
         _AmsynthControl_LFOFreq();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         // Freq Mod Amount
         _AmsynthControl_LFOToOscillators();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_LFOToFilterCutoff();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_LFOToAmp();
 
-        ImGui::EndGroup();
+        ImGui::EndChild();
     }
 
     // Section: Reverb
     {
-        ImGui::BeginGroup();
-        ImGui::Text("Reverb");
+        ImGui::BeginChild("Reverb", ImVec2(400, 150), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("Reverb");
+            ImGui::EndMenuBar();
+        }
 
         _AmsynthControl_ReverbWet();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_ReverbRoomsize();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_ReverbDamp();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_ReverbWidth();
-        ImGui::EndGroup();
+
+        ImGui::EndChild();
     }
 
-    ImGui::SameLine();
+    // ImGui::SameLine();
 
     // Section: Filter
     {
-        ImGui::BeginGroup();
-        ImGui::Text("Filter");
-        ImGui::SameLine(0, 90);
+        ImGui::BeginChild("Filter", ImVec2(600, 300), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("Filter");
+
+            _AmsynthControl_FilterSlope();
+
+            ImGui::EndMenuBar();
+        }
 
         // ------ Filter option selectors ------
         _AmsynthControl_FilterType();
         ImGui::SameLine(0, 40);
 
-        _AmsynthControl_FilterSlope();
-
         // ------ Filter basic options ------
         _AmsynthControl_FilterResonance();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_FilterCutoff();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_FilterKeyTrackAmount();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_FilterEnvAmount();
 
         // ------ Filter ADSR ------
 
         _AmsynthControl_FilterEnvAttack();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_FilterEnvDecay();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_FilterEnvSustain();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_FilterEnvRelease();
-        ImGui::SameLine();
 
-        ImGui::EndGroup();
+        ImGui::EndChild();
     }
 
     // Section: Keyboard Options
     {
-        ImGui::BeginGroup();
-        ImGui::Text("Keyboard Options");
+        ImGui::BeginChild("Keyboard Options", ImVec2(700, 150), true, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar())
+        {
+            ImGui::Text("Keyboard Options");
+            ImGui::EndMenuBar();
+        }
 
         _AmsynthControl_PortamentoTime();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_PortamentoMode();
-        ImGui::SameLine();
+        ImGui::SameLine(0, 40);
 
         _AmsynthControl_KeyboardMode();
-        ImGui::EndGroup();
+        ImGui::SameLine(0, 40);
+
+        // -------- Velocity strategy - How to process velocity --------
+        _AmsynthControl_FilterKeyVelocityAmount();
+        ImGui::SameLine(0, 40);
+
+        _AmsynthControl_AmpVelocityAmount();
+
+        ImGui::EndChild();
     }
 
+#if 0
     ImGui::SameLine();
 
     // Section: Velocity strategy - How to process velocity
@@ -275,6 +325,7 @@ void ImguiEditor::_AmsynthWindow_Main()
         _AmsynthControl_AmpVelocityAmount();
         ImGui::EndGroup();
     }
+#endif
 
     // Section: Option buttons
     // TODO: Must move to elsewhere properly
