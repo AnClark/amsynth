@@ -115,7 +115,7 @@ void ImguiEditor::_getParamProperties(int parameter_index, double *minimum, doub
 /**
  * Get all parameters' values and properties before creating any controllers.
  */
-void ImguiEditor::_getAllParameters()
+void ImguiEditor::getAllParameters()
 {
     for (int i = 0; i < kAmsynthParameterCount; i++)
     {
@@ -128,6 +128,18 @@ void ImguiEditor::_getAllParameters()
 
         // Get parameter properties
         _getParamProperties(i, &paramMinValues[i], &paramMaxValues[i], &paramDefaultValues[i], &paramStepSizes[i]);
+    }
+}
+
+/**
+ * Get all parameters' values before each drawing of UI frame.
+ */
+void ImguiEditor::_getAllParamValues()
+{
+    for (int i = 0; i < kAmsynthParameterCount; i++)
+    {
+        // Get parameter values
+        paramList[i] = (float)synthInstance->getParameterValue((Param)i);
     }
 }
 
@@ -296,8 +308,8 @@ int ImguiEditor::setupImGui()
 
 void ImguiEditor::drawFrame()
 {
-    // Get current parameter names, values and properties
-    _getAllParameters();
+    // Get current parameter values
+    _getAllParamValues();
 
     // The main drawing process
     // Remember to check myImGuiContext before drawing frames, or ImGui_ImplOpenGL2_NewFrame() may execute
@@ -395,6 +407,9 @@ static void imgui_drawing_thread(ImguiEditor *editor)
 {
     // Setup ImGui
     editor->setupImGui();
+
+    // Get current parameter names, values and properties
+    editor->getAllParameters();
 
     // Render UI
     while (!glfwWindowShouldClose(editor->getWindow())) {

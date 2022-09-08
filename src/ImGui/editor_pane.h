@@ -82,6 +82,7 @@ public:
     // Used in drawing thread
     int setupGLFW();
     int setupImGui();
+    void getAllParameters();
 
     GLFWwindow *getWindow() { return this->window; }
     ImGuiContext *getImGuiContext() { return this->myImGuiContext; }
@@ -114,7 +115,7 @@ private:
 
     // Parameter properties
     void _getParamProperties(int parameter_index, double *minimum, double *maximum, double *default_value, double *step_size);
-    void _getAllParameters();
+    void _getAllParamValues();
     double paramMinValues[kAmsynthParameterCount] = {0.0f};
     double paramMaxValues[kAmsynthParameterCount] = {0.0f};
     double paramDefaultValues[kAmsynthParameterCount] = {0.0f}; // NOTICE: Currently unnecessary, because DSP side will automatically
