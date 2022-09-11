@@ -21,6 +21,9 @@
 
 #include "editor_pane.h"
 
+/** FontAudio icon font */
+#include "IconsFontaudio.h" // FontAudio UTF-8 codepoints
+
 #define KNOB_PARAMS(index) &paramList[index], paramMinValues[index], paramMaxValues[index]
 
 void ImguiEditor::_AmsynthControl_Oscilloscope()

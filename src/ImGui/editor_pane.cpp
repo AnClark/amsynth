@@ -22,6 +22,10 @@
 #include "editor_pane.h"
 #include "font.h"
 
+/** FontAudio icon font */
+#include "IconsFontaudio.h" // FontAudio UTF-8 codepoints
+#include "fontaudio.h"      // FontAudio font data
+
 static int glfw_initialized_cnt;
 
 /**
@@ -300,8 +304,17 @@ int ImguiEditor::setupImGui()
      * binary_to_source utility included in Dear ImGui, this util is built and run by
      * CMake when generating the make files. Default font is Roboto
      * To change font, set the CMake varible INCLUDED_FONT */
+
+    // Load the first font (default font)
+    io.Fonts->AddFontFromMemoryCompressedTTF(font_compressed_data, font_compressed_size, 16);
+
+    // Merge icon font. See ImGui docs/FONTS.md
     ImFontConfig config;
-    io.Fonts->AddFontFromMemoryCompressedTTF(font_compressed_data, font_compressed_size, 16, &config);
+    config.MergeMode = true;
+    config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
+    static const ImWchar icon_ranges[] = {ICON_MIN_FAD, ICON_MAX_FAD, 0};
+    io.Fonts->AddFontFromMemoryCompressedTTF(fontaudio_compressed_data, fontaudio_compressed_size, 16, &config,
+                                             icon_ranges);
 
     return GLFW_TRUE;
 }

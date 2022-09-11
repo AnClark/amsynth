@@ -165,6 +165,16 @@ add_custom_command (OUTPUT ${GENERATED_FONT_DIR}/font.h
 
 add_custom_target (generate_font DEPENDS ${GENERATED_FONT_DIR}/font.h)
 
+# This is FontAudio icon font by Michelangelo Nottoli (https://github.com/fefanto/fontaudio)
+set (INCLUDED_FONT_FONTAUDIO ${CMAKE_SOURCE_DIR}/vendor/fonts/icon-fonts/fontaudio.ttf)
+add_custom_command (OUTPUT ${GENERATED_FONT_DIR}/fontaudio.h
+                    COMMAND ./binary_to_compressed${CMAKE_EXECUTABLE_SUFFIX} "${INCLUDED_FONT_FONTAUDIO}" fontaudio > "${GENERATED_FONT_DIR}/fontaudio.h"
+                    DEPENDS binary_to_compressed VERBATIM)
+add_custom_target (generate_font_fontaudio DEPENDS ${GENERATED_FONT_DIR}/fontaudio.h)
+# And, this is UTF-8 codepoint definition file from IconFontCppHeaders (https://github.com/juliettef/IconFontCppHeaders)
+# Copy it to generated font directory
+configure_file (${CMAKE_SOURCE_DIR}/vendor/fonts/icon-fonts/IconsFontaudio.h ${GENERATED_FONT_DIR}/IconsFontaudio.h COPYONLY)
+
 
 #
 # Core components
@@ -400,6 +410,7 @@ if (CONFIG_VST_IMGUI)
         ${GENERATED_FONT_DIR}
     )
     add_dependencies (${PROJECT_NAME}_vst_imgui generate_font)
+    add_dependencies (${PROJECT_NAME}_vst_imgui generate_font_fontaudio)
 
     # Include my own ImGui config
     # Mainly contains workaround for thread-safety
