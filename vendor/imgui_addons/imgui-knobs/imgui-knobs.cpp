@@ -142,6 +142,14 @@ namespace ImGuiKnobs {
         template<typename DataType>
         knob<DataType> knob_with_drag(const char *label, ImGuiDataType data_type, DataType *p_value, DataType v_min, DataType v_max, float _speed, const char *format, float size, ImGuiKnobFlags flags) {
             auto speed = _speed == 0 ? (v_max - v_min) / 250.f : _speed;
+
+            // Allow solving ID conflict with "##" tag.
+            // (see ImGui docs/FAQ.md: "How can I have multiple widgets with the same label?")
+            const char *label_end = ImGui::FindRenderedTextEnd(label, NULL); // Returns the memory address at the first
+                                                                             // "#" char (or '\0' if no "#" chars)
+            char label_render[label_end - label + 1] = {'\0'};
+            strncpy(label_render, label, label_end - label);
+
             ImGui::PushID(label);
             auto width = size == 0 ? ImGui::GetTextLineHeight() * 4.0f : size * ImGui::GetIO().FontGlobalScale;
             ImGui::PushItemWidth(width);
@@ -154,16 +162,16 @@ namespace ImGuiKnobs {
 
             // Draw title
             if (!(flags & ImGuiKnobFlags_NoTitle)) {
-                auto title_size = ImGui::CalcTextSize(label, NULL, false, width);
+                auto title_size = ImGui::CalcTextSize(label, label_end, true, width);
 
                 // Center title
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (width - title_size[0]) * 0.5f);
 
-                ImGui::Text("%s", label);
+                ImGui::Text("%s", label_render);
             }
 
             // Draw knob
-            knob<DataType> k(label, data_type, p_value, v_min, v_max, speed, width * 0.5f, format, flags);
+            knob<DataType> k(label_render, data_type, p_value, v_min, v_max, speed, width * 0.5f, format, flags);
 
             // Draw tooltip
             if (flags & ImGuiKnobFlags_ValueTooltip && (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) || ImGui::IsItemActive())) {
