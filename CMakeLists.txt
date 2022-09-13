@@ -586,34 +586,7 @@ install (FILES ${DIST_SKINSDEFAULT_DATA}
 # Install factory banks
 set (BANKS_DIR ${CONFIG_PKGDATADIR}/banks)
 
-set (DIST_BANKS_DATA
-    data/banks/amsynth_factory.bank
-    data/banks/BriansBank01.amSynth.bank
-    data/banks/BriansBank02.amSynth.bank
-    data/banks/BriansBank03.amSynth.bank
-    data/banks/BriansBank04.amSynth.bank
-    data/banks/BriansBank05.amSynth.bank
-    data/banks/BriansBank06.amSynth.bank
-    data/banks/BriansBank07.amSynth.bank
-    data/banks/BriansBank08.amSynth.bank
-    data/banks/BriansBank09.amSynth.bank
-    data/banks/BriansBank10.amSynth.bank
-    data/banks/BriansBank11.amSynth.bank
-    data/banks/BriansBank12.amSynth.bank
-    data/banks/BriansBank13.amSynth.bank
-    data/banks/BriansBank14.amSynth.bank
-    data/banks/BriansBank15.amSynth.bank
-    data/banks/BriansBank16.amSynth.bank
-    data/banks/BriansBank17.amSynth.bank
-    data/banks/BriansBank18.amSynth.bank
-    data/banks/BriansBank19.amSynth.bank
-    data/banks/BriansBank20.amSynth.bank
-    data/banks/BriansBank21.amSynth.bank
-    data/banks/BriansBank22.amSynth.bank
-    data/banks/PatriksBank01.bank
-    data/banks/PatriksBank02.bank
-    data/banks/PatriksBank03.bank
-)
+file (GLOB DIST_BANKS_DATA data/banks/*.bank)
 
 install (FILES ${DIST_BANKS_DATA}
     DESTINATION ${BANKS_DIR}
