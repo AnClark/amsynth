@@ -36,6 +36,7 @@
 #include <imgui_addons/anclark/imgui_extra_button.h>
 #include <imgui_addons/anclark/imgui_oscilloscope.h>
 #include <imgui_addons/imgui-knobs/imgui-knobs.h>
+#include <imgui_addons/tanluteam/imgui_piano.h>
 
 /** Prefer WINAPI on Windows to reduce dependencies */
 #include <atomic>
@@ -199,6 +200,10 @@ private:
     void _mouseButtonCallback(int button, int action, int mods);
     void _scrollCallback(double xoffset, double yoffset);
     void _keyCallback(int key, int scancode, int action, int mods);
+
+    // ImGui widget instance
+    // Some addons are manipulated with a class.
+    ImGui::Piano piano;
 };
 
 // The drawing thread function

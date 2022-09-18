@@ -55,6 +55,112 @@ void ImguiEditor::_AmsynthWindow_Main()
 
     ImGui::Begin("Amsynth Main Window", (bool *)true, flagsMainWindow);
 
+    // Piano
+    if (1)
+    {
+        // ImGui::BeginChild("Piano", ImVec2(800, 150), true);
+        // ImGui::Piano piano;   // Use the global ImGui::Piano definition in ImguiEditor. Bypass.
+        piano.drawKeyboard(ImVec2(700, 150), true);
+
+        if (ImGui::Button("Press Key #29"))
+        {
+            piano.down(29, 65);
+        }
+
+        if (ImGui::Button("Send Note On C4"))
+        {
+            unsigned char buffer[3] = {MIDI_STATUS_NOTE_ON, 0x3c, 0x7f}; // Buffer format: {status, data1, data2}
+            synthInstance->getMidiController()->HandleMidiData(buffer, 3);
+        }
+
+        if (ImGui::Button("Send Note Off C4"))
+        {
+            unsigned char buffer[3] = {MIDI_STATUS_NOTE_OFF, 0x3c, 0}; // Buffer format: {status, data1, data2}
+            synthInstance->getMidiController()->HandleMidiData(buffer, 3);
+        }
+
+        piano.drawDebugTable();
+        // ImGui::EndChild();
+    }
+
+    // Piano from midiosc
+    if (0)
+    {
+        // draw a keyboard
+        static int keydown[128] = {};
+        static int xpos[16] = {0}, ypos[16] = {0}, spiciness[16] = {0};
+        static int topnote = 127;
+
+        ImDrawList *draw_list = ImGui::GetWindowDrawList();
+        float pw = ImGui::GetWindowContentRegionWidth();
+        float ph = 64.f;
+        float kw = pw / 75.f;
+        const ImVec2 p = ImGui::GetCursorScreenPos();
+        const ImVec2 q(p.x + pw, p.y + ph);
+        draw_list->AddRectFilled(ImVec2(q.x - 64.f, p.y - 66.f), ImVec2(q.x, p.y - 2.f), 0xff808080, 2.f);
+        draw_list->AddRectFilled(ImVec2(q.x - 70.f, p.y - 66.f), ImVec2(q.x - 66.f, p.y - 2.f), 0xff808080, 2.f);
+        draw_list->AddRectFilled(ImVec2(q.x - 70.f, p.y - 2.f - spiciness[0] * 0.5f), ImVec2(q.x - 66.f, p.y - 2.f),
+                                 0xff0000ff, 2.f);
+        float xx = q.x - 64.f + xpos[0] * 0.5f, yy = p.y - 2.f - ypos[0] * 0.5f;
+        draw_list->AddLine(ImVec2(xx, p.y - 66.f), ImVec2(xx, p.y - 2.f), 0x80000000, 1.f);
+        draw_list->AddLine(ImVec2(q.x - 64.f, yy), ImVec2(q.x, yy), 0x80000000, 1.f);
+        draw_list->AddRectFilled(p, q, 0xff000000);
+        draw_list->AddCircleFilled(ImVec2(xx + 0.5f, yy + 0.5f), 2.f, 0xff0000ff, 8);
+        const ImVec2 m = ImGui::GetIO().MousePos;
+        int mb = ImGui::GetIO().MouseDown[0];
+        static int mousekey = -1;
+        if (!mb && mousekey >= 0)
+        {
+            // ProcessMidiEvent(0x80 + (mousekey << 8), true);
+            mousekey = -1;
+        }
+        int keytab[2][7] = {{0, 2, 4, 5, 7, 9, 11}, {1, 3, -10000, 6, 8, 10, -10000}};
+        for (int blackwhite = 0; blackwhite < 2; ++blackwhite)
+        {
+            for (int i = 0; i < 75; ++i)
+            {
+                int midinote = keytab[blackwhite][i % 7] + 12 * (i / 7);
+                if (midinote < 0 || midinote > 127)
+                    continue;
+
+                ImU32 col = 0xffeeeeee;
+                if (midinote > topnote)
+                    col = 0x80eeeeee;
+                if (blackwhite)
+                    col ^= 0xdddddd;
+                if (midinote == topnote)
+                    col = 0xffffee00;
+                ImVec2 a, b;
+                float blacky = p.y + ph * 0.6f;
+                if (blackwhite)
+                    a = ImVec2(p.x + kw * i + kw * 0.66f, p.y), b = ImVec2(p.x + kw * i + kw * 1.33f, blacky);
+                else
+                    a = ImVec2(p.x + kw * i, p.y), b = ImVec2(p.x + kw * i + kw - 1.f, q.y);
+                if (m.x >= a.x && m.x <= b.x && m.y >= a.y && m.y <= b.y && (m.y < blacky) == blackwhite)
+                {
+                    if (mb)
+                    {
+                        if (mousekey >= 0 && mousekey != midinote)
+                        {
+                            // ProcessMidiEvent(0x80 + (mousekey << 8), true);
+                            mousekey = -1;
+                        }
+                        if (mousekey != midinote)
+                        {
+                            mousekey = midinote;
+                            // ProcessMidiEvent(0x90 + (mousekey << 8) + (127 << 16), true);
+                        }
+                    }
+                    col ^= 0x4040;
+                }
+                if (keydown[midinote])
+                    col ^= 0x8080;
+                draw_list->AddRectFilled(a, b, col, 2.f);
+            }
+        }
+        ImGui::Dummy(ImVec2(pw, ph));
+    }
+
     // Section 01: OSC1
     {
         ImGui::BeginChild("OSC1", ImVec2(200, 150), true, ImGuiWindowFlags_MenuBar);
