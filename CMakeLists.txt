@@ -25,6 +25,13 @@ project(amsynth
   HOMEPAGE_URL "https://github.com/amsynth/amsynth"
 )
 
+# Optimization flags
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options (-Og)
+elseif (CMAKE_BUILD_TYPE STREQUAL "")    # Optimize when no build type specified
+    add_compile_options (-O3)
+endif ()
+
 option (CONFIG_GUI "Enable GUI support" ON)
 option (CONFIG_VST "Enable VST support" OFF)
 if (NOT WIN32)      # On Windows I prefer VST
