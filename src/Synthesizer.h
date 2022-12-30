@@ -94,6 +94,9 @@ public:
     MidiController *getMidiController() { return _midiController; };
     PresetController *getPresetController() { return _presetController; }
 
+    bool getIfNeedsResetAllVoices() { return needsResetAllVoices_; }
+    void setIfNeedsResetAllVoices(bool value) { needsResetAllVoices_ = value; }
+
 // private:
 
     double _sampleRate;
