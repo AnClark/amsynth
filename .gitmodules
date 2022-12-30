@@ -1,0 +1,7 @@
+[submodule "vendor/dpf"]
+	path = vendor/dpf
+	url = https://github.com/AnClark/dpf.git
+	branch = amsynth
+[submodule "vendor/dpf-widgets"]
+	path = vendor/dpf-widgets
+	url = https://github.com/DISTRHO/DPF-Widgets.git
