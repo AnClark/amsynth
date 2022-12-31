@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#if defined _MSC_VER
+#if defined _MSC_VER || defined _WIN32
 #include <direct.h>
 #endif
 
@@ -100,7 +100,7 @@ bool filesystem::copy(const std::string &from, const std::string &to)
 
 bool filesystem::create_dir(const std::string &path)
 {
-#if defined _MSC_VER
+#if defined _MSC_VER || defined _WIN32
     return _mkdir(path.c_str()) == 0;
 #else
     return mkdir(path.c_str(), 0755) == 0;
