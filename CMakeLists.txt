@@ -183,3 +183,38 @@ target_link_libraries (${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_imgui_addons)
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE "cfgmgr32" "imm32" "setupapi" "version")   # To deal with SDL2 linker error on Msys2
 endif ()
+
+
+#
+# Factory bank conversion - convert factory banks to C++ code so that they can be accessed internally
+#
+
+add_subdirectory(utils/factory_bank_to_c)
+
+set (GENERATED_FACTORY_BANK_DIR "${CMAKE_BINARY_DIR}/factory_bank")
+file (MAKE_DIRECTORY ${GENERATED_FACTORY_BANK_DIR})
+
+set (SOURCES_FACTORY_BANK
+    ${GENERATED_FACTORY_BANK_DIR}/amsynth_factory_banks.cpp
+    ${GENERATED_FACTORY_BANK_DIR}/amsynth_factory_banks.h
+)
+set (SOURCES_FACTORY_BANK_HANDLER
+    src/EmbedPresetController.cpp
+    src/EmbedPresetController.h
+)
+
+add_custom_command (
+    OUTPUT ${SOURCES_FACTORY_BANK}
+    COMMAND ./utils/factory_bank_to_c/factory_bank_to_c${CMAKE_EXECUTABLE_SUFFIX} ${PROJECT_SOURCE_DIR}/data/banks ${GENERATED_FACTORY_BANK_DIR}
+    DEPENDS factory_bank_to_c
+    VERBATIM
+)
+
+# Factory bank content and handler module
+add_library (${PROJECT_NAME}_factory_bank STATIC
+    ${SOURCES_FACTORY_BANK}
+    ${SOURCES_FACTORY_BANK_HANDLER}
+)
+target_include_directories (${PROJECT_NAME}_factory_bank PRIVATE src)
+
+target_link_libraries (${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_factory_bank)
