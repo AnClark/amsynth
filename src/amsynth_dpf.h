@@ -36,6 +36,8 @@ class Synthesizer_DPF : public Synthesizer
 public:
     Synthesizer_DPF();
 
+    String getParameterDisplay(Param parameter) const;
+
     void process(unsigned int nframes,
                             const MidiEvent* &midi_in, uint32_t midi_in_event_count,
                             std::vector<amsynth_midi_cc_t> &midi_out,
@@ -119,6 +121,7 @@ protected:
 
     float getParameterValue(uint32_t index) const override;
     void setParameterValue(uint32_t index, float value) override;
+    String getParameterDisplay(uint32_t index) const override;
     void loadProgram(uint32_t index) override;
 
     // ----------------------------------------------------------------------------------------------------------------

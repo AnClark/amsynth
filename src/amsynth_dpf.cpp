@@ -144,6 +144,16 @@ void AmsynthPlugin::setParameterValue(uint32_t index, float value)
 }
 
 /**
+    Get the current value display in the plugin generic UI.@n
+    The host may call this function from any context, including realtime processing.@n
+    @note This is a custom extension of DPF API.
+*/
+String AmsynthPlugin::getParameterDisplay(uint32_t index) const
+{
+    return fSynthesizer->getParameterDisplay((Param)index);
+}
+
+/**
     Load a program.@n
     The host may call this function from any context, including realtime processing.@n
     Must be implemented by your plugin class only if DISTRHO_PLUGIN_WANT_PROGRAMS is enabled.
@@ -199,6 +209,11 @@ void AmsynthPlugin::sampleRateChanged(double newSampleRate)
 Synthesizer_DPF::Synthesizer_DPF()
     : Synthesizer()
 {
+}
+
+String Synthesizer_DPF::getParameterDisplay(Param parameter) const
+{
+    return String((_presetController->getCurrentPreset().getParameter(parameter).getStringValue().c_str()));
 }
 
 void Synthesizer_DPF::process(unsigned int nframes,

@@ -332,3 +332,11 @@
    @note This macro is required when building CLAP plugins
 */
 #define DISTRHO_PLUGIN_CLAP_ID "nickdowell.amsynth"
+
+/**
+   Whether the plugin wants to set parameter display in generic UI.
+   Useful if a plugin has its own method to render user-friendly parameter values.
+   @note This is a custom extension to DPF API.
+   @see Plugin::getParameterDisplay()
+ */
+#define DISTRHO_PLUGIN_WANT_PARAMETER_DISPLAY 1
