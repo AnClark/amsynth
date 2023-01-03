@@ -1,5 +1,7 @@
 #include "imgui_oscilloscope.h"
 
+#include <stdlib.h>
+
 /**
  * ImGui::Oscilloscope - Simple Oscilloscope based on ImGui::PlotLines()
  *
@@ -20,7 +22,7 @@ void ImGui::Oscilloscope(char const *label, float *samples, int sampleCount, int
 
     if (sampleCount < drawSampleCount) // Make sure drawSampleCount is below sample array's size
         drawSampleCount = sampleCount;
-    float drawSamples[drawSampleCount]; // Samples to be used to draw oscilloscope
+    float *drawSamples = (float*)calloc(drawSampleCount, sizeof(float)); // Samples to be used to draw oscilloscope
 
     // Quantize sample value for ImGui::PlotLines() rendering
     // To make each sample value resides on the base of a middle value

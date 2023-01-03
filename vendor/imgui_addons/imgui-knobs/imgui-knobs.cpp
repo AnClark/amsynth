@@ -147,7 +147,7 @@ namespace ImGuiKnobs {
             // (see ImGui docs/FAQ.md: "How can I have multiple widgets with the same label?")
             const char *label_end = ImGui::FindRenderedTextEnd(label, NULL); // Returns the memory address at the first
                                                                              // "#" char (or '\0' if no "#" chars)
-            char label_render[label_end - label + 1] = {'\0'};
+            char *label_render = (char*)calloc(label_end - label + 1, sizeof(char));
             strncpy(label_render, label, label_end - label);
 
             ImGui::PushID(label);

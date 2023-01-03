@@ -15,7 +15,7 @@ int mini_hash(const char *str)
     const int MOD = 101;
 
     const int len = strlen(str);
-    int hash[len] = {0};
+    int *hash = (int*)calloc(len, sizeof(int));
 
     for (int i = 1; i < len; i++)
         hash[i] = (hash[i - 1]) * P + (int)(str[i]) % MOD; // Hash formula
