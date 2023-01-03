@@ -20,6 +20,7 @@
  */
 
 #include <algorithm>
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -176,7 +177,11 @@ bool start_convert(const std::string bank_directory, const std::string output_di
     fprintf(stderr, "* Converting bank file:\n");
 
     for (auto iter = s_banks.begin(); iter != s_banks.end(); iter++) {
-        sprintf_s(symbol, "bank_%d", symbol_index++);
+#ifdef _WIN32
+        sprintf_s(symbol, "bank_%d", symbol_index++); // sprintf_s() is Win32-specific
+#else
+        snprintf(symbol, 32, "bank_%d", symbol_index++);
+#endif
 
         bool res = binary_to_compressed_c_local(iter->file_path.c_str(), symbol, bank_array_code, bank_array_size, bank_array_symbol);
         if (res) {
@@ -208,7 +213,11 @@ bool start_convert(const std::string bank_directory, const std::string output_di
     symbol_index = 0;
     for (auto iter = s_banks.begin(); iter != s_banks.end(); iter++) {
         if (iter->success) {
-            sprintf_s(symbol, "bank_%d", symbol_index++);
+#ifdef _WIN32
+            sprintf_s(symbol, "bank_%d", symbol_index++); // sprintf_s() is Win32-specific
+#else
+            snprintf(symbol, 32, "bank_%d", symbol_index++);
+#endif
 
             fprintf(out_cpp, "    EmbedBankInfo %s = {\n", symbol);
             fprintf(out_cpp, "        .name = \"%s\",\n", iter->name.c_str());
