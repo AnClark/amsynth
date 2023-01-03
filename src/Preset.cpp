@@ -167,17 +167,29 @@ Preset::fromString(const std::string &str)
 	return true;
 }
 
+#ifdef _WIN32
 static std::vector<bool> s_ignoreParameter(kAmsynthParameterCount);
+#else
+static bool s_ignoreParameter[kAmsynthParameterCount];
+#endif
 
 bool Preset::shouldIgnoreParameter(int parameter)
 {
+#ifdef _WIN32
 	assert(parameter >= 0 && parameter < (int)s_ignoreParameter.size());
+#else
+	assert(parameter >= 0);
+#endif
 	return s_ignoreParameter[parameter];
 }
 
 void Preset::setShouldIgnoreParameter(int parameter, bool ignore)
 {
+#ifdef _WIN32
 	assert(parameter >= 0 && parameter < (int)s_ignoreParameter.size());
+#else
+	assert(parameter >= 0);
+#endif
 	s_ignoreParameter[parameter] = ignore;
 }
 
