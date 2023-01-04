@@ -5,98 +5,126 @@
  * SPDX-License-Identifier: ISC
  */
 
-#include "DistrhoUI.hpp"
-#include "ResizeHandle.hpp"
+#include "amsynth_dpf_ui.h"
+
+#include "Preset.h"
 
 START_NAMESPACE_DISTRHO
 
-// --------------------------------------------------------------------------------------------------------------------
-
-class AmsynthPluginUI : public UI
+/**
+   UI class constructor.
+   The UI should be initialized to a default state that matches the plugin side.
+ */
+AmsynthPluginUI::AmsynthPluginUI()
+    : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT)
+    , fResizeHandle(this)
 {
-    float fGain = 0.0f;
-    ResizeHandle fResizeHandle;
+    setGeometryConstraints(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT, true);
 
-    // ----------------------------------------------------------------------------------------------------------------
+    // hide handle if UI is resizable
+    if (isResizable())
+        fResizeHandle.hide();
 
-public:
-   /**
-      UI class constructor.
-      The UI should be initialized to a default state that matches the plugin side.
-    */
-    AmsynthPluginUI()
-        : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT),
-          fResizeHandle(this)
-    {
-        setGeometryConstraints(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT, true);
+    // Initialize parameters
+    _initParameterProperties();
+}
 
-        // hide handle if UI is resizable
-        if (isResizable())
-            fResizeHandle.hide();
-    }
+AmsynthPluginUI::~AmsynthPluginUI() { }
 
-protected:
-    // ----------------------------------------------------------------------------------------------------------------
-    // DSP/Plugin Callbacks
+// ----------------------------------------------------------------------------------------------------------------
+// DSP/Plugin Callbacks
 
-   /**
-      A parameter has changed on the plugin side.@n
-      This is called by the host to inform the UI about parameter changes.
-    */
-    void parameterChanged(uint32_t index, float value) override
-    {
-        DISTRHO_SAFE_ASSERT_RETURN(index == 0,);
+/**
+   A parameter has changed on the plugin side.@n
+   This is called by the host to inform the UI about parameter changes.
+ */
+void AmsynthPluginUI::parameterChanged(uint32_t index, float value)
+{
+    fParamValues[index] = value;
 
-        fGain = value;
-        repaint();
-    }
+    repaint();
+}
 
-    // ----------------------------------------------------------------------------------------------------------------
-    // Widget Callbacks
+/**
+    A program has been loaded on the plugin side.@n
+    This is called by the host to inform the UI about program changes.
+*/
+void AmsynthPluginUI::programLoaded(uint32_t index)
+{
+    repaint();
+}
 
-   /**
-      ImGui specific onDisplay function.
-    */
-    void onImGuiDisplay() override
-    {
-        const float width = getWidth();
-        const float height = getHeight();
-        const float margin = 20.0f * getScaleFactor();
+/**
+   A state has changed on the plugin side.@n
+   This is called by the host to inform the UI about state changes.
+ */
+void AmsynthPluginUI::stateChanged(const char* key, const char* value)
+{
+    d_stderr("Invoked stateChanged(). Key = %s, Value = %s", key, value);
 
-        ImGui::SetNextWindowPos(ImVec2(margin, margin));
-        ImGui::SetNextWindowSize(ImVec2(width - 2 * margin, height - 2 * margin));
+    repaint();
+}
 
-        if (ImGui::Begin("Simple gain", nullptr, ImGuiWindowFlags_NoResize))
-        {
-            static char aboutText[256] = "This is a demo plugin made with ImGui.\n";
-            ImGui::InputTextMultiline("About", aboutText, sizeof(aboutText));
+// ----------------------------------------------------------------------------------------------------------------
+// Widget Callbacks
 
-            if (ImGui::SliderFloat("Gain (dB)", &fGain, -90.0f, 30.0f))
-            {
-                if (ImGui::IsItemActivated())
-                    editParameter(0, true);
+/**
+  ImGui specific onDisplay function.
+*/
+void AmsynthPluginUI::onImGuiDisplay()
+{
+    const float width = getWidth();
+    const float height = getHeight();
+    const float margin = 20.0f * getScaleFactor();
 
-                setParameterValue(0, fGain);
-            }
+    ImGui::SetNextWindowPos(ImVec2(margin, margin));
+    ImGui::SetNextWindowSize(ImVec2(width - 2 * margin, height - 2 * margin));
 
-            if (ImGui::IsItemDeactivated())
-            {
-                editParameter(0, false);
-            }
+    if (ImGui::Begin("amsynth ui", nullptr, ImGuiWindowFlags_NoResize)) {
+        static char aboutText[256] = "This is a demo plugin made with ImGui.\n";
+        ImGui::InputTextMultiline("About", aboutText, sizeof(aboutText));
+
+        if (ImGui::SliderFloat("amp_attack", &fParamValues[kAmsynthParameter_AmpEnvAttack], fParamMinValues[kAmsynthParameter_AmpEnvAttack], fParamMaxValues[kAmsynthParameter_AmpEnvAttack])) {
+            if (ImGui::IsItemActivated())
+                editParameter(kAmsynthParameter_AmpEnvAttack, true);
+
+            setParameterValue(kAmsynthParameter_AmpEnvAttack, fParamValues[kAmsynthParameter_AmpEnvAttack]);
         }
-        ImGui::End();
+
+        if (ImGui::IsItemDeactivated()) {
+            editParameter(kAmsynthParameter_AmpEnvAttack, false);
+        }
     }
 
-    DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AmsynthPluginUI)
-};
+    ImGui::End();
+}
+
+// ----------------------------------------------------------------------------------------------------------------
+// Internal Procedures
+
+/**
+  Initialize parameter properties.
+  This function should be called only once in the constructor.
+*/
+void AmsynthPluginUI::_initParameterProperties()
+{
+    ::Preset preset;
+
+    for (int index = 0; index < kAmsynthParameterCount; index++) {
+        ::Parameter& parameter = preset.getParameter(index);
+
+        fParamMinValues[index] = parameter.getMin();
+        fParamMaxValues[index] = parameter.getMax();
+        fParamDefaultValues[index] = parameter.getValue();
+        fParamStepSizes[index] = parameter.getStep();
+    }
+}
 
 // --------------------------------------------------------------------------------------------------------------------
 
 UI* createUI()
 {
-    return new ImGuiPluginUI();
+    return new AmsynthPluginUI();
 }
-
-// --------------------------------------------------------------------------------------------------------------------
 
 END_NAMESPACE_DISTRHO

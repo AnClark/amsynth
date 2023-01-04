@@ -184,9 +184,9 @@ dpf_add_plugin (${PROJECT_NAME}
   TARGETS clap lv2 vst2 vst3 jack
   FILES_DSP
       src/amsynth_dpf.cpp
-  #FILES_UI
-  #    src/amsynth_dpf_ui.cpp
-  #    ${DPF_WIDGETS_PATH}/opengl/DearImGui.cpp
+  FILES_UI
+      src/amsynth_dpf_ui.cpp
+      ${DPF_WIDGETS_PATH}/opengl/DearImGui.cpp
 )
 
 target_include_directories (${PROJECT_NAME} PUBLIC src)
