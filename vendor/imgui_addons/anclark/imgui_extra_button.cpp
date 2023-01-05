@@ -78,3 +78,28 @@ bool ImGui::SelectorPanel(char const *label, char const *names[], unsigned char 
 
     return value_changed;
 }
+
+bool ImGui::SelectorPanel(char const *label, char const *names[], float &value, const unsigned int nameCount,
+                          char const *tooltips[], ImVec2 const &size, const unsigned int tableColumn)
+{
+    bool value_changed = false;
+
+    if (ImGui::BeginTable(label, tableColumn, ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_Borders, size))
+    {
+        for (int i = 0; i < nameCount; i++)
+        {
+            ImGui::TableNextColumn();
+            if (ImGui::Selectable(names[i], (int)value == i))
+            {
+                value = (float)i;
+                value_changed = true;
+            }
+
+            if (tooltips)
+                ImGui::ShowTooltipOnHover(tooltips[i]);
+        }
+        ImGui::EndTable();
+    }
+
+    return value_changed;
+}
