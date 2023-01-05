@@ -397,7 +397,7 @@ bool ImGui::Fader(const char *label, const ImVec2 &size, int *v, const int v_min
         format = "%d";
 
     const bool hovered = ItemHoverable(frame_bb, id);
-    if ((hovered && g.IO.MouseClicked[0]) || g.NavActivateId == id || g.NavInputId == id)
+    if ((hovered && g.IO.MouseClicked[0]) || g.NavActivateId == id || g.NavActivateInputId == id)
     {
         SetActiveID(id, window);
         SetFocusID(id, window);
