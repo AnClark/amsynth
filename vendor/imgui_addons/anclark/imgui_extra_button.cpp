@@ -54,6 +54,37 @@ bool ImGui::ComboButton(char const *label, unsigned char &value, char const *con
     return value_changed;
 }
 
+bool ImGui::ComboButton(char const *label, float &value, char const *const names[], unsigned int nameCount, ImVec2 const &size, char const *tooltip)
+{
+    bool value_changed = false;
+    auto current_effect_item = names[(unsigned int)value];
+    char button_label[128];
+
+    if (ImGui::BeginPopupContextItem(label))
+    {
+        for (int i = 0; i < nameCount; i++)
+        {
+            bool is_selected = (current_effect_item == names[i]);
+            if (ImGui::Selectable(names[i]))
+            {
+                value = (float)i;
+                value_changed = true;
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+
+    sprintf(button_label, "%s##%d", names[(unsigned int)value], mini_hash(label));
+    if (ImGui::Button(button_label, size))
+        ImGui::OpenPopup(label);
+
+    if (tooltip)
+        ImGui::ShowTooltipOnHover(tooltip);
+
+    return value_changed;
+}
+
 bool ImGui::SelectorPanel(char const *label, char const *names[], unsigned char &value, const unsigned int nameCount,
                           char const *tooltips[], ImVec2 const &size, const unsigned int tableColumn)
 {
