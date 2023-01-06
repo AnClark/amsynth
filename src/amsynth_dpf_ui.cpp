@@ -6,6 +6,7 @@
  */
 
 #include "amsynth_dpf_ui.h"
+#include "ImGui/EditorUI.h"
 
 #include "Preset.h"
 
@@ -18,6 +19,7 @@ START_NAMESPACE_DISTRHO
 AmsynthPluginUI::AmsynthPluginUI()
     : UI(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT)
     , fResizeHandle(this)
+    , fEditorUI(nullptr)
 {
     setGeometryConstraints(DISTRHO_UI_DEFAULT_WIDTH, DISTRHO_UI_DEFAULT_HEIGHT, true);
 
@@ -27,6 +29,9 @@ AmsynthPluginUI::AmsynthPluginUI()
 
     // Initialize parameters
     _initParameterProperties();
+
+    // Create ImGui UI assistant instance
+    fEditorUI = new EditorUI(this);
 }
 
 AmsynthPluginUI::~AmsynthPluginUI() { }
@@ -73,6 +78,7 @@ void AmsynthPluginUI::stateChanged(const char* key, const char* value)
 */
 void AmsynthPluginUI::onImGuiDisplay()
 {
+#if 0
     const float width = getWidth();
     const float height = getHeight();
     const float margin = 20.0f * getScaleFactor();
@@ -97,6 +103,9 @@ void AmsynthPluginUI::onImGuiDisplay()
     }
 
     ImGui::End();
+#else
+    fEditorUI->amsynthWindow_Main();
+#endif
 }
 
 // ----------------------------------------------------------------------------------------------------------------

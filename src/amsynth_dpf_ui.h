@@ -5,6 +5,11 @@
 #include "DistrhoUI.hpp"
 #include "ResizeHandle.hpp"
 
+// Forward declarations
+class EditorUI;
+
+// --------------------------------------------------------------------------------------------------------------------
+
 START_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -17,6 +22,9 @@ class AmsynthPluginUI : public UI {
     float fParamStepSizes[kAmsynthParameterCount];
 
     ResizeHandle fResizeHandle;
+
+    EditorUI* fEditorUI; // ImGui editor UI assistant instance
+    friend EditorUI; // Allow EditorUI to access private members (param properties)
 
     // ----------------------------------------------------------------------------------------------------------------
 

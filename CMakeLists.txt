@@ -177,6 +177,20 @@ target_include_directories(${PROJECT_NAME}_imgui_addons PUBLIC ${IMGUI_ADDON_INC
 
 
 #
+# Dear ImGui editor UI sources
+# These source files contain codes of ImGui-based UI construction.
+# Separated from amsynth_dpf_ui.cpp for clarity.
+#
+
+set (EDITOR_UI_SOURCES
+    src/ImGui/EditorUI.cpp
+    src/ImGui/EditorUI_MainWindow.cpp
+    src/ImGui/EditorUI_Controllers.cpp
+    src/ImGui/EditorUI_Panels.cpp
+)
+
+
+#
 # DPF target
 #
 
@@ -187,11 +201,16 @@ dpf_add_plugin (${PROJECT_NAME}
   FILES_UI
       src/amsynth_dpf_ui.cpp
       ${DPF_WIDGETS_PATH}/opengl/DearImGui.cpp
+      ${EDITOR_UI_SOURCES}
 )
 
 target_include_directories (${PROJECT_NAME} PUBLIC src)
 target_include_directories (${PROJECT_NAME} PUBLIC ${DPF_WIDGETS_PATH}/generic)
 target_include_directories (${PROJECT_NAME} PUBLIC ${DPF_WIDGETS_PATH}/opengl)
+
+# Include header directory of ImGui
+target_include_directories (${PROJECT_NAME} PUBLIC ${DPF_WIDGETS_PATH}/opengl/DearImGui)
+target_include_directories (${PROJECT_NAME} PUBLIC vendor)  # ImGui addons
 
 target_link_libraries (${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_core)
 target_link_libraries (${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_imgui_addons)
