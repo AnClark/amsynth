@@ -129,6 +129,30 @@ void AmsynthPluginUI::_initParameterProperties()
     }
 }
 
+// ----------------------------------------------------------------------------------------------------------------
+// Utility APIs
+
+/**
+  Randomize parameters from UI side.
+*/
+void AmsynthPluginUI::randomiseParameters()
+{
+    ::Preset preset;
+
+    for (int index = 0; index < kAmsynthParameterCount; index++) {
+        ::Parameter& parameter = preset.getParameter(index);
+        parameter.setValue(fParamValues[index]);
+
+        if (index != kAmsynthParameter_MasterVolume) {
+            parameter.randomise();
+        }
+
+        // Synchronize randomised parameter
+        setParameterValue(index, parameter.getValue()); // DSP side
+        fParamValues[index] = parameter.getValue(); // UI side
+    }
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 
 UI* createUI()
