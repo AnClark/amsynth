@@ -153,6 +153,30 @@ void AmsynthPluginUI::randomiseParameters()
     }
 }
 
+/**
+  All notes off (panic).
+*/
+void AmsynthPluginUI::panic()
+{
+    /**
+      There is no API to send MIDI data to DSP side. Instead, DPF provides UI::sendNote().
+      But we can still send any MIDI data via this method, simply doing a hack.
+
+      In method UI::sendNote(uint8_t channel, uint8_t note, uint8_t velocity):
+
+      `channel` will be converted into MIDI data 0 by:
+        `midi_data[0] = (velocity != 0 ? 0x90 : 0x80) | channel;`
+
+      To send MIDI controller data, we need to transform midi_data[0] into MIDI_STATUS_CONTROLLER (0xB0)
+      by simply applying a proper `channel` value. It would be easy to calculate:
+            0x80 | channel = 0xB0
+        => 0b10000000 | channel = 0b10110000
+        => channel = 0b00110000
+        => channel = 0x30
+    */
+    sendNote(0x30, 0x7B, 0); // MIDI_CC_ALL_NOTES_OFF = 0x7B
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 
 UI* createUI()
