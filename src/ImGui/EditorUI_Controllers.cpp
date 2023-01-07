@@ -29,7 +29,7 @@
 #include "imgui_addons/imgui-knobs/imgui-knobs.h"
 
 /** FontAudio icon font */
-//#include "IconsFontaudio.h" // FontAudio UTF-8 codepoints
+#include "IconsFontaudio.h" // FontAudio UTF-8 codepoints
 
 #define KNOB_PARAMS(index) &fUI->fParamValues[index], fUI->fParamMinValues[index], fUI->fParamMaxValues[index]
 #define SET_PARAM_VALUE(index) fUI->setParameterValue(index, fUI->fParamValues[index])
@@ -48,8 +48,7 @@ void EditorUI::_AmsynthControl_Oscillator1Waveform()
 {
     const unsigned char OSC1_WAVEFORM_COUNT = 5;
     static const char* osc1_waveformOptions[OSC1_WAVEFORM_COUNT] = {
-        // ICON_FAD_MODSINE, ICON_FAD_MODSQUARE, ICON_FAD_MODTRI, ICON_FAD_MODRANDOM, ICON_FAD_WAVEFORM};
-        "Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample (Hold)"
+        ICON_FAD_MODSINE, ICON_FAD_MODSQUARE, ICON_FAD_MODTRI, ICON_FAD_MODRANDOM, ICON_FAD_WAVEFORM
     };
     static const char* osc1_waveformTooltips[OSC1_WAVEFORM_COUNT] = { "Sine", "Square", "Triangle", "Whitenoise",
         "Noise / Sample (Hold)" };
@@ -71,8 +70,7 @@ void EditorUI::_AmsynthControl_Oscillator2Waveform()
 {
     const unsigned char OSC2_WAVEFORM_COUNT = 5;
     static const char* osc2_waveformOptions[OSC2_WAVEFORM_COUNT] = {
-        // ICON_FAD_MODSINE, ICON_FAD_MODSQUARE, ICON_FAD_MODTRI, ICON_FAD_MODRANDOM, ICON_FAD_WAVEFORM};
-        "Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample (Hold)"
+        ICON_FAD_MODSINE, ICON_FAD_MODSQUARE, ICON_FAD_MODTRI, ICON_FAD_MODRANDOM, ICON_FAD_WAVEFORM
     };
     static const char* osc2_waveformTooltips[OSC2_WAVEFORM_COUNT] = { "Sine", "Square", "Triangle", "Whitenoise",
         "Noise / Sample (Hold)" };
@@ -190,9 +188,8 @@ void EditorUI::_AmsynthControl_LFOWaveform()
 {
     const unsigned char LFO_WAVEFORM_COUNT = 7;
     static const char* lfo_waveformOptions[LFO_WAVEFORM_COUNT] = {
-        // ICON_FAD_MODSINE,  ICON_FAD_MODSQUARE, ICON_FAD_MODTRI,    ICON_FAD_MODRANDOM,
-        // ICON_FAD_WAVEFORM, ICON_FAD_MODSAWUP,  ICON_FAD_MODSAWDOWN};
-        "Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample & Hold", "Sawtooth (up)", "Sawtooth (down)"
+        ICON_FAD_MODSINE, ICON_FAD_MODSQUARE, ICON_FAD_MODTRI, ICON_FAD_MODRANDOM,
+        ICON_FAD_WAVEFORM, ICON_FAD_MODSAWUP, ICON_FAD_MODSAWDOWN
     };
     static const char* lfo_waveformTooltips[LFO_WAVEFORM_COUNT] = {
         "Sine", "Square", "Triangle", "Whitenoise", "Noise / Sample & Hold", "Sawtooth (up)", "Sawtooth (down)"
@@ -315,11 +312,9 @@ void EditorUI::_AmsynthControl_KeyboardMode()
 void EditorUI::_AmsynthControl_FilterType()
 {
     const int FILTER_TYPE_COUNT = 5;
-    // static const char* filter_typeOptions[FILTER_TYPE_COUNT] = { ICON_FAD_FILTER_LOWPASS, ICON_FAD_FILTER_HIGHPASS,
-    //     ICON_FAD_FILTER_BANDPASS, ICON_FAD_FILTER_NOTCH,
-    //     ICON_FAD_FILTER_BYPASS };
-    static const char* filter_typeOptions[FILTER_TYPE_COUNT] = { "Low Pass", "High Pass", "Band Pass", "Notch",
-        "Bypass" };
+    static const char* filter_typeOptions[FILTER_TYPE_COUNT] = { ICON_FAD_FILTER_LOWPASS, ICON_FAD_FILTER_HIGHPASS,
+        ICON_FAD_FILTER_BANDPASS, ICON_FAD_FILTER_NOTCH,
+        ICON_FAD_FILTER_BYPASS };
     static const char* filter_typeTooltips[FILTER_TYPE_COUNT] = { "Low Pass", "High Pass", "Band Pass", "Notch",
         "Bypass" };
 
