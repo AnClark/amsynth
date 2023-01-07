@@ -313,15 +313,12 @@ void EditorUI::amsynthWindow_Main()
 
         ImGui::SameLine();
 
-#if 0 // TODO: A better way to handle randomisation or panic?
         if (ImGui::Button("Randomise", ImVec2(90, 0)))
-            synthInstance->getPresetController()->randomiseCurrentPreset();
+            fUI->randomiseParameters();
 
         ImGui::SameLine();
-
         if (ImGui::Button("Panic", ImVec2(90, 0)))
-            panic();
-#endif
+            fUI->panic();
     }
 
     ImGui::End();
