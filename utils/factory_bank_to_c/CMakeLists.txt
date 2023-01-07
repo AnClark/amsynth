@@ -22,3 +22,8 @@ add_executable (factory_bank_to_c
 )
 target_include_directories (factory_bank_to_c PRIVATE .)
 target_link_options (factory_bank_to_c PRIVATE -static)
+
+# Fallback to pre-C++20 struct definition syntax on MSVC
+if (MSVC)
+    target_compile_definitions (factory_bank_to_c PRIVATE -DMSVC_COMPATIBILITY)
+endif ()

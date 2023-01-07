@@ -218,7 +218,7 @@ bool start_convert(const std::string bank_directory, const std::string output_di
 #else
             snprintf(symbol, 32, "bank_%d", symbol_index++);
 #endif
-
+#ifndef MSVC_COMPATIBILITY
             fprintf(out_cpp, "    EmbedBankInfo %s = {\n", symbol);
             fprintf(out_cpp, "        .name = \"%s\",\n", iter->name.c_str());
             fprintf(out_cpp, "        .file_path = \"%s\",\n", iter->file_path.c_str());
@@ -226,7 +226,14 @@ bool start_convert(const std::string bank_directory, const std::string output_di
             fprintf(out_cpp, "        .file_array = %s,\n", iter->file_array_name.c_str());
             fprintf(out_cpp, "        .file_array_size = %d,\n", iter->file_array_size);
             fprintf(out_cpp, "    };\n");
-
+#else
+            fprintf(out_cpp, "    EmbedBankInfo %s;\n", symbol);
+            fprintf(out_cpp, "    %s.name = \"%s\";\n", symbol, iter->name.c_str());
+            fprintf(out_cpp, "    %s.file_path = \"%s\";\n", symbol, iter->file_path.c_str());
+            fprintf(out_cpp, "    %s.read_only = %s;\n", symbol, iter->read_only ? "true" : "false");
+            fprintf(out_cpp, "    %s.file_array = %s;\n", symbol, iter->file_array_name.c_str());
+            fprintf(out_cpp, "    %s.file_array_size = %d;\n\n", symbol, iter->file_array_size);
+#endif
             fprintf(out_cpp, "    factory_banks_list.push_back(%s);\n\n", symbol);
         } else {
             fprintf(out_cpp, "// WARNING: Bank file \"%s\" is failed to read\n", iter->name.c_str());
