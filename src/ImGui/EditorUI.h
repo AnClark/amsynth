@@ -91,7 +91,7 @@ private:
     // Helper functions for building up widgets
 
     void _insertKnob(const char* label, uint32_t paramIndex);
-    void _insertKnobInt();
+    void _insertKnobInt(const char *label, uint32_t paramIndex, int &paramIntStorage);    // FIXME: This does not work!
 };
 
 #endif // _EDITOR_UI_H

@@ -26,3 +26,22 @@ void EditorUI::_insertKnob(const char* label, uint32_t paramIndex)
             fUI->editParameter(paramIndex, false);
     }
 }
+
+// FIXME: This does not work!
+void EditorUI::_insertKnobInt(const char *label, uint32_t paramIndex, int &paramIntStorage)
+{
+    paramIntStorage = (int)fUI->fParamValues[paramIndex];
+
+    if (ImGuiKnobs::KnobInt(label, &paramIntStorage, (int)fUI->fParamMinValues[paramIndex],
+                            (int)fUI->fParamMaxValues[paramIndex], 0.0F, (const char *)nullptr,
+                            ImGuiKnobVariant_Stepped))
+    {
+        if (ImGui::IsItemActivated())
+            fUI->editParameter(paramIndex, true);
+
+        fUI->setParameterValue(paramIndex, (float)paramIntStorage);
+
+        if (ImGui::IsItemDeactivated())
+            fUI->editParameter(paramIndex, false);
+    }
+}

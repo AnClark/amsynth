@@ -40,14 +40,6 @@ void EditorUI::amsynthWindow_Main()
 
     ImGui::Begin("Amsynth Main Window", (bool*)true, flagsMainWindow);
 
-#if 1
-    // TEST SECTION ==================================
-    _AmsynthControl_Oscillator1Waveform(); // Waveform Switch
-    _AmsynthControl_Oscillator1Pulsewidth(); // Shape (Pulse Width)
-    _AmsynthControl_Oscillator2Waveform();
-
-    ImGui::End();
-#else
     // Section 01: OSC1
     {
         ImGui::BeginChild("OSC1", ImVec2(200, 150), true, ImGuiWindowFlags_MenuBar);
@@ -340,7 +332,6 @@ void EditorUI::amsynthWindow_Main()
      *
      * TODO: Sync with host's program viewer (Memorymoon behavior)
      */
-    if (showPresetWindow)
-        _AmsynthWindow_Preset();
-#endif
+    //if (showPresetWindow)
+    //    _AmsynthWindow_Preset();
 }
