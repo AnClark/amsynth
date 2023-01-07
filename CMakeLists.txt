@@ -187,10 +187,22 @@ set (GENERATED_FONT_DIR ${CMAKE_BINARY_DIR}/generated_fonts)
 add_executable (binary_to_compressed EXCLUDE_FROM_ALL ${FONT_SOURCE_DIR}/utils/binary_to_compressed_c.cpp)
 target_link_options (binary_to_compressed PRIVATE -static)
 
+# Handle cross-build stuff
+# On native build, users can directly assign executable target name as param of add_custom_command(),
+# but cross-build does not support this feature.
+if (CMAKE_CROSSCOMPILING)
+    set_target_properties (binary_to_compressed PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    set (binary_to_compressed_PATH ./binary_to_compressed${CMAKE_EXECUTABLE_SUFFIX})
+else ()
+    set (binary_to_compressed_PATH binary_to_compressed)
+endif ()
+
 # This is FontAudio icon font by Michelangelo Nottoli (https://github.com/fefanto/fontaudio)
 set (INCLUDED_FONT_FONTAUDIO ${FONT_SOURCE_DIR}/icon-fonts/fontaudio.ttf)
 add_custom_command (OUTPUT ${GENERATED_FONT_DIR}/fontaudio.h
-                    COMMAND ./binary_to_compressed${CMAKE_EXECUTABLE_SUFFIX} "${INCLUDED_FONT_FONTAUDIO}" fontaudio > "${GENERATED_FONT_DIR}/fontaudio.h"
+                    COMMAND ${binary_to_compressed_PATH} "${INCLUDED_FONT_FONTAUDIO}" fontaudio > "${GENERATED_FONT_DIR}/fontaudio.h"
                     DEPENDS binary_to_compressed VERBATIM)
 add_custom_target (generate_font_fontaudio DEPENDS ${GENERATED_FONT_DIR}/fontaudio.h)
 # And, this is UTF-8 codepoint definition file from IconFontCppHeaders (https://github.com/juliettef/IconFontCppHeaders)
@@ -253,6 +265,17 @@ endif ()
 
 add_subdirectory(utils/factory_bank_to_c)
 
+# Handle cross-build stuff
+if (CMAKE_CROSSCOMPILING)
+    # Move factory_bank_to_c executable to CMAKE_BINARY_DIR for convenience
+    set_target_properties (factory_bank_to_c PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    set (factory_bank_to_c_PATH ./factory_bank_to_c${CMAKE_EXECUTABLE_SUFFIX})
+else ()
+    set (factory_bank_to_c_PATH factory_bank_to_c)
+endif ()
+
 set (GENERATED_FACTORY_BANK_DIR "${CMAKE_BINARY_DIR}/factory_bank")
 file (MAKE_DIRECTORY ${GENERATED_FACTORY_BANK_DIR})
 
@@ -267,7 +290,7 @@ set (SOURCES_FACTORY_BANK_HANDLER
 
 add_custom_command (
     OUTPUT ${SOURCES_FACTORY_BANK}
-    COMMAND ./utils/factory_bank_to_c/factory_bank_to_c${CMAKE_EXECUTABLE_SUFFIX} ${PROJECT_SOURCE_DIR}/data/banks ${GENERATED_FACTORY_BANK_DIR}
+    COMMAND ${factory_bank_to_c_PATH} ${PROJECT_SOURCE_DIR}/data/banks ${GENERATED_FACTORY_BANK_DIR}
     DEPENDS factory_bank_to_c
     VERBATIM
 )
