@@ -177,6 +177,28 @@ target_include_directories(${PROJECT_NAME}_imgui_addons PUBLIC ${IMGUI_ADDON_INC
 
 
 #
+# Built-in fonts
+#
+
+set (FONT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/vendor/fonts)
+set (GENERATED_FONT_DIR ${CMAKE_BINARY_DIR}/generated_fonts)
+
+# Binary-to-C convertor from Dear ImGui
+add_executable (binary_to_compressed EXCLUDE_FROM_ALL ${FONT_SOURCE_DIR}/utils/binary_to_compressed_c.cpp)
+target_link_options (binary_to_compressed PRIVATE -static)
+
+# This is FontAudio icon font by Michelangelo Nottoli (https://github.com/fefanto/fontaudio)
+set (INCLUDED_FONT_FONTAUDIO ${FONT_SOURCE_DIR}/icon-fonts/fontaudio.ttf)
+add_custom_command (OUTPUT ${GENERATED_FONT_DIR}/fontaudio.h
+                    COMMAND ./binary_to_compressed${CMAKE_EXECUTABLE_SUFFIX} "${INCLUDED_FONT_FONTAUDIO}" fontaudio > "${GENERATED_FONT_DIR}/fontaudio.h"
+                    DEPENDS binary_to_compressed VERBATIM)
+add_custom_target (generate_font_fontaudio DEPENDS ${GENERATED_FONT_DIR}/fontaudio.h)
+# And, this is UTF-8 codepoint definition file from IconFontCppHeaders (https://github.com/juliettef/IconFontCppHeaders)
+# Copy it to generated font directory
+configure_file (${FONT_SOURCE_DIR}/icon-fonts/IconsFontaudio.h ${GENERATED_FONT_DIR}/IconsFontaudio.h COPYONLY)
+
+
+#
 # Dear ImGui editor UI sources
 # These source files contain codes of ImGui-based UI construction.
 # Separated from amsynth_dpf_ui.cpp for clarity.
@@ -211,6 +233,10 @@ target_include_directories (${PROJECT_NAME} PUBLIC ${DPF_WIDGETS_PATH}/opengl)
 # Include header directory of ImGui
 target_include_directories (${PROJECT_NAME} PUBLIC ${DPF_WIDGETS_PATH}/opengl/DearImGui)
 target_include_directories (${PROJECT_NAME} PUBLIC vendor)  # ImGui addons
+
+# Built-in fonts
+add_dependencies (${PROJECT_NAME} generate_font_fontaudio)
+target_include_directories (${PROJECT_NAME} PUBLIC ${GENERATED_FONT_DIR})
 
 target_link_libraries (${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_core)
 target_link_libraries (${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_imgui_addons)
