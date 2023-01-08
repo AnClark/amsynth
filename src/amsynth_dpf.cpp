@@ -8,6 +8,9 @@
 
 #include "EmbedPresetController.h"
 
+#include "amsynth_dpf_controls.h"
+#include <cstring>
+
 START_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -16,14 +19,15 @@ START_NAMESPACE_DISTRHO
     Populate how many factory banks and programs should the plugin load.
 */
 constexpr size_t kPresetsPerBank = sizeof(BankInfo::presets) / sizeof(BankInfo::presets[0]); // Preset count per bank
-static const int numPrograms = EmbedPresetController::getPresetBanks().size() * kPresetsPerBank; // Total program count
+// static const int numPrograms = EmbedPresetController::getPresetBanks().size() * kPresetsPerBank; // Total program count
+static const int numPrograms = 128 + 1;
 
 /**
     Plugin class constructor.@n
     You must set all parameter values to their defaults, matching ParameterRanges::def.
  */
 AmsynthPlugin::AmsynthPlugin()
-    : Plugin(kAmsynthParameterCount, numPrograms, 0) // parameters, programs, states
+    : Plugin(kAmsynthParameterCount, numPrograms, kAmsynthStateCount) // parameters, programs, states
 {
     // Must explicitly set a default sample rate first,
     // because derived Synthesizer class cannot obtain default value.
@@ -67,6 +71,65 @@ void AmsynthPlugin::initParameter(uint32_t index, DISTRHO::Parameter& parameter)
 }
 
 /**
+    Initialize the state @a index.@n
+    This function will be called once, shortly after the plugin is created.@n
+    Must be implemented by your plugin class only if DISTRHO_PLUGIN_WANT_STATE is enabled.
+*/
+void AmsynthPlugin::initState(uint32_t index, State& state)
+{
+    switch (index) {
+    case kAmsynthState_BankName: {
+        state.key = "BankName";
+        state.label = "BankName";
+        state.hints = kAmsynthState_BankName;
+        state.description = "Current selected bank name";
+        state.defaultValue = "Default";
+        break;
+    }
+    case kAmsynthState_BankId: {
+        state.key = "BankId";
+        state.label = "BankId";
+        state.hints = kAmsynthState_BankId;
+        state.description = "Current selected bank ID";
+        state.defaultValue = "0";
+        break;
+    }
+    case kAmsynthState_PresetName: {
+        state.key = "PresetName";
+        state.label = "PresetName";
+        state.hints = kAmsynthState_PresetName;
+        state.description = "Current selected preset name";
+        state.defaultValue = "No Preset";
+        break;
+    }
+    case kAmsynthState_PresetId: {
+        state.key = "PresetId";
+        state.label = "PresetId";
+        state.hints = kAmsynthState_PresetId;
+        state.description = "Current selected preset ID";
+        state.defaultValue = "0";
+        break;
+    }
+    case kAmsynthState_LastTouchedBankName: {
+        state.key = "LastTouchedBankName";
+        state.label = "LastTouchedBankName";
+        state.hints = kAmsynthState_LastTouchedBankName;
+        state.description = "Last touched bank ID";
+        state.defaultValue = "Default";
+        break;
+    }
+    case kAmsynthState_LastTouchedBankId: {
+        state.key = "LastTouchedBankId";
+        state.label = "LastTouchedBankId";
+        state.hints = kAmsynthState_LastTouchedBankId;
+        state.description = "Last touched bank ID";
+        state.defaultValue = "0";
+        break;
+    }
+    }
+}
+
+/**
     Set the name of the program @a index.@n
     This function will be called once, shortly after the plugin is created.@n
     Must be implemented by your plugin class only if DISTRHO_PLUGIN_WANT_PROGRAMS is enabled.
@@ -94,7 +157,7 @@ void AmsynthPlugin::initProgramName(uint32_t index, String& programName)
         programName = "-- Init / User --";
         return;
     }
-
+#if 0
     // Check if there were preset files or not
     // If you don't check, host will crash if no preset was installed
     if (EmbedPresetController::getPresetBanks().size()) {
@@ -116,6 +179,27 @@ void AmsynthPlugin::initProgramName(uint32_t index, String& programName)
         // Do not continue accessing if no preset was found
         return;
     }
+#else
+    if (EmbedPresetController::getPresetBanks().size()) {
+        // As #0 is "Initial", other factory programs should be put into the next hole.
+        // "index" is host's display index, and "actual_index" is the corresponding bank's index.
+        int actual_index = index - 1;
+
+        // Obtain bank and preset
+        auto& bank = EmbedPresetController::getPresetBanks().at(fState.bankId);
+        auto& preset = bank.presets[actual_index % kPresetsPerBank];
+
+        // Set current obtained preset name, then show the name on host
+        programName = preset.getName().c_str();
+
+        // d_stderr("Preset index: %d, bank: %s, name: %s", index, bank.name.c_str(), preset.getName().c_str());
+
+        return;
+    } else {
+        // Do not continue accessing if no preset was found
+        return;
+    }
+#endif
 }
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -163,11 +247,57 @@ void AmsynthPlugin::loadProgram(uint32_t index)
     // Obtain bank and preset
     // The corresponding factory program index is just by one item before host's index.
     int actual_index = index >= 1 ? index - 1 : 0; // In case of possible error
-    auto& bank = EmbedPresetController::getPresetBanks().at(actual_index / kPresetsPerBank);
+    auto& bank = EmbedPresetController::getPresetBanks().at(fState.bankId);
     auto& preset = bank.presets[actual_index % kPresetsPerBank];
 
     // Apply preset
     fSynthesizer->_presetController->setCurrentPreset(preset);
+}
+
+/**
+    Get the value of an internal state.@n
+    The host may call this function from any non-realtime context.@n
+    Must be implemented by your plugin class if DISTRHO_PLUGIN_WANT_FULL_STATE is enabled.
+    @note The use of this function breaks compatibility with the DSSI format.
+*/
+String AmsynthPlugin::getState(const char* key) const
+{
+    if (strcmp(key, "BankName") == 0) {
+        return String(fState.bankName.c_str());
+    } else if (strcmp(key, "BankId") == 0) {
+        return String(fState.bankId);
+    } else if (strcmp(key, "PresetName") == 0) {
+        return String(fState.presetName.c_str());
+    } else if (strcmp(key, "PresetId") == 0) {
+        return String(fState.presetId);
+    } else if (strcmp(key, "LastTouchedBankName") == 0) {
+        return String(fState.lastTouchedBankName.c_str());
+    } else if (strcmp(key, "LastTouchedBankId") == 0) {
+        return String(fState.lastTouchedBankId);
+    }
+
+    return String("");
+}
+
+/**
+    Change an internal state @a key to @a value.@n
+    Must be implemented by your plugin class only if DISTRHO_PLUGIN_WANT_STATE is enabled.
+*/
+void AmsynthPlugin::setState(const char* key, const char* value)
+{
+    if (strcmp(key, "BankName") == 0) {
+        fState.bankName = value;
+    } else if (strcmp(key, "BankId") == 0) {
+        fState.bankId = atoi(value);
+    } else if (strcmp(key, "PresetName") == 0) {
+        fState.presetName = value;
+    } else if (strcmp(key, "PresetId") == 0) {
+        fState.presetId = atoi(value);
+    } else if (strcmp(key, "LastTouchedBankName") == 0) {
+        fState.lastTouchedBankName = value;
+    } else if (strcmp(key, "LastTouchedBankId") == 0) {
+        fState.lastTouchedBankId = atoi(value);
+    }
 }
 
 // ----------------------------------------------------------------------------------------------------------------

@@ -67,3 +67,30 @@ void EditorUI::_loadBuiltInFonts()
     io.Fonts->AddFontFromMemoryCompressedTTF(fontaudio_compressed_data, fontaudio_compressed_size, 16, &config,
         icon_ranges);
 }
+
+void EditorUI::_updateBankState(const char* bankName, const int bankId)
+{
+    fUI->fState.bankName = bankName;
+    fUI->fState.bankId = bankId;
+
+    fUI->setState("BankName", bankName);
+    fUI->setState("BankId", std::to_string(bankId).c_str());
+}
+
+void EditorUI::_updatePresetState(const char* presetName, const int presetId)
+{
+    fUI->fState.presetName = presetName;
+    fUI->fState.presetId = presetId;
+
+    fUI->setState("PresetName", presetName);
+    fUI->setState("PresetId", std::to_string(presetId).c_str());
+}
+
+void EditorUI::_updateLastTouchedBank(const char* bankName, const int bankId)
+{
+    fUI->fState.lastTouchedBankName = bankName;
+    fUI->fState.lastTouchedBankId = bankId;
+
+    fUI->setState("LastTouchedBankName", bankName);
+    fUI->setState("LastTouchedBankId", std::to_string(bankId).c_str());
+}

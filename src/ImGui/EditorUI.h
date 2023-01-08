@@ -96,6 +96,13 @@ private:
     // ----------------------------------------------------------------------------------------------------------------
     // Helper functions for resources
     void _loadBuiltInFonts();
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Helper functions for states
+
+    void _updateBankState(const char* bankName, const int bankId);
+    void _updatePresetState(const char* presetName, const int presetId);
+    void _updateLastTouchedBank(const char* bankName, const int bankId);
 };
 
 #endif // _EDITOR_UI_H

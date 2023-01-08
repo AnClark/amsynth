@@ -5,6 +5,8 @@
 #include "DistrhoUI.hpp"
 #include "ResizeHandle.hpp"
 
+#include "amsynth_dpf_controls.h"
+
 // Forward declarations
 class EditorUI;
 class Preset;
@@ -26,6 +28,8 @@ class AmsynthPluginUI : public UI {
 
     EditorUI* fEditorUI; // ImGui editor UI assistant instance
     friend EditorUI; // Allow EditorUI to access private members (param properties)
+
+    AmsynthState fState;
 
     // ----------------------------------------------------------------------------------------------------------------
 

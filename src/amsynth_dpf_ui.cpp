@@ -10,6 +10,9 @@
 
 #include "Preset.h"
 
+#include <cstdlib>
+#include <cstring>
+
 START_NAMESPACE_DISTRHO
 
 /**
@@ -66,6 +69,20 @@ void AmsynthPluginUI::programLoaded(uint32_t index)
 void AmsynthPluginUI::stateChanged(const char* key, const char* value)
 {
     d_stderr("Invoked stateChanged(). Key = %s, Value = %s", key, value);
+
+    if (strcmp(key, "BankName") == 0) {
+        fState.bankName = value;
+    } else if (strcmp(key, "BankId") == 0) {
+        fState.bankId = atoi(value);
+    } else if (strcmp(key, "PresetName") == 0) {
+        fState.presetName = value;
+    } else if (strcmp(key, "PresetId") == 0) {
+        fState.presetId = atoi(value);
+    } else if (strcmp(key, "LastTouchedBankName") == 0) {
+        fState.lastTouchedBankName = value;
+    } else if (strcmp(key, "LastTouchedBankId") == 0) {
+        fState.lastTouchedBankId = atoi(value);
+    }
 
     repaint();
 }

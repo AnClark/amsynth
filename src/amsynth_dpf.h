@@ -20,6 +20,8 @@
 #include "controls.h"
 #include "Synthesizer.h"
 
+#include "amsynth_dpf_controls.h"
+
 // Then, include DPF header file
 #include "DistrhoPlugin.hpp"
 
@@ -48,6 +50,8 @@ class AmsynthPlugin : public Plugin
 {
     double fSampleRate = getSampleRate();
     std::unique_ptr<Synthesizer_DPF> fSynthesizer = std::make_unique<Synthesizer_DPF>();
+
+    AmsynthState fState;
 
 public:
     AmsynthPlugin();
@@ -115,6 +119,7 @@ protected:
 
     void initParameter(uint32_t index, DISTRHO::Parameter& parameter) override;
     void initProgramName(uint32_t index, String& programName) override;
+    void initState(uint32_t index, State& state) override;
 
     // ----------------------------------------------------------------------------------------------------------------
     // Internal data
@@ -123,6 +128,8 @@ protected:
     void setParameterValue(uint32_t index, float value) override;
     String getParameterDisplay(uint32_t index) const override;
     void loadProgram(uint32_t index) override;
+    String getState(const char* key) const override;
+    void setState(const char* key, const char* value) override;
 
     // ----------------------------------------------------------------------------------------------------------------
     // Audio/MIDI Processing
