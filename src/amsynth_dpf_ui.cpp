@@ -133,6 +133,18 @@ void AmsynthPluginUI::_initParameterProperties()
 // Utility APIs
 
 /**
+  Load preset on UI side.
+*/
+void AmsynthPluginUI::loadPreset(const Preset& preset)
+{
+    for (int param_index = 0; param_index < kAmsynthParameterCount; param_index++) {
+        float value = preset.getParameter(param_index).getValue();
+        setParameterValue(param_index, value);
+        fParamValues[param_index] = value;
+    }
+}
+
+/**
   Randomize parameters from UI side.
 */
 void AmsynthPluginUI::randomiseParameters()

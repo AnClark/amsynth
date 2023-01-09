@@ -7,6 +7,7 @@
 
 // Forward declarations
 class EditorUI;
+class Preset;
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +35,8 @@ public:
 
     // ----------------------------------------------------------------------------------------------------------------
     // Utility APIs
+
+    void loadPreset(const Preset& preset);
 
     void randomiseParameters();
     void panic();
