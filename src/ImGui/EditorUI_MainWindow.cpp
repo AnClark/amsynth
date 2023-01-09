@@ -329,6 +329,6 @@ void EditorUI::amsynthWindow_Main()
      *
      * TODO: Sync with host's program viewer (Memorymoon behavior)
      */
-    //if (showPresetWindow)
-    //    _AmsynthWindow_Preset();
+    if (showPresetWindow)
+        _AmsynthWindow_Preset();
 }
