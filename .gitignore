@@ -60,3 +60,5 @@ test-suite.log
 /data/*metainfo.xml
 man/amsynth.1
 man/*/amsynth.1
+build*/
+.cache*/
