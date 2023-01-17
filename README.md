@@ -40,6 +40,23 @@ Loading banks from external directories (upstream's behavior) is not yet impleme
 
 ## How to build
 
+### Prerequisites
+
+Install build essentials via your environment's package manager:
+
+```bash
+# On Debian/Ubuntu
+sudo apt install build-essentials cmake ninja
+
+# On Arch Linux
+sudo pacman -S gcc cmake ninja make
+sudo pacman -S clang                    # If you prefer Clang
+
+# On Msys2
+pacman -S mingw-w64-gcc mingw-w64-cmake mingw-w64-ninja make
+pacman -S mingw-w64-clang               # If you prefer Clang
+```
+
 ### Clone this project first
 
 ```bash
@@ -56,14 +73,24 @@ git pull origin dpf-implementation --rebase
 
 ```bash
 # Configure
+# Ninja is the recommended generator. You can also use GNU make instead.
 cd amsynth-dpf
-cmake -S . -B build -GNinja
+cmake -S . -B build -GNinja    # Build with Ninja
+cmake -S . -B build            # Omit -G parameter to use GNU make
 
 # Build
 cmake --build build
 ```
 
+> **NOTICE:**
+>
+> **On Msys2, please operate in MINGW64 shell.**
+>
+> Otherwise, if you run those commands in Msys shell, it will prefer Msys's POSIX compatibility toolchains, which is incompatible with native environment!
+
 ### Cross-build on Linux for Windows
+
+[Wine](https://winehq.org) is required for executing resource generators. Remember to install it.
 
 ```bash
 # Configure
@@ -74,7 +101,7 @@ cmake -S . -B build-win32 -GNinja -DCMAKE_TOOLCHAIN_FILE=windows-cross-build.cma
 cmake --build build
 ```
 
-> **NOTICE: ** Win32 version of SDL2 is not yet provided, so the standalone version will not build, but it does not affect the plug-in versions.
+> **NOTICE:** Win32 version of SDL2 is not yet provided, so the standalone version will not build, but it does not affect plug-in versions.
 
 ### Use Clang instead of GCC
 
@@ -97,14 +124,14 @@ Autotools files are not parts of DPF implementation. But you can still build the
 
 ## Notice
 
-This project uses AnClark's own fork of DPF, which has features that upstream does not present (e.g. `DISTRHO::Plugin::getParameterDisplay()`).
+This project uses AnClark's own fork of DPF, which has features that upstream does not present (e.g. `DISTRHO::Plugin::getParameterDisplay()`, VST2 program implementations).
 
 ## TO-DO lists
 
 - [✅] Basic implemention
 - [✅] Embedded factory program support
 - [✅] VST2 effGetParamDisplay support
-- [  ] Dear ImGui UI implementation
-- [  ] Switch factory preset within plug-in UI
+- [✅] Dear ImGui UI implementation
+- [✅] Switch factory preset within plug-in UI
 - [  ] External bank support
 - [  ] MSVC-compatible
