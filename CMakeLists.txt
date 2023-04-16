@@ -27,21 +27,6 @@ project (amsynth
 
 set (CMAKE_CXX_STANDARD 14)
 
-#
-# Global workarounds
-#
-
-# Enable -fPIC to let static library link properly
-#
-# On GNU glibc, -fPIC is required, or the following error may occur:
-#    relocation R_X86_64_PC32 against symbol `stderr@@GLIBC_2.2.5' can not be used
-#    when making a shared object; recompile with -fPIC
-#
-# MinGW-w64 also supports this flag. Even though on Windows, with or without this flag
-# does not matter, we can still use it as well.
-if (NOT MSVC)
-    add_compile_options (-fPIC)
-endif ()
 
 
 #
@@ -296,10 +281,7 @@ add_custom_command (
 )
 
 # Factory bank content and handler module
-add_library (${PROJECT_NAME}_factory_bank STATIC
+target_sources (${PROJECT_NAME} PRIVATE
     ${SOURCES_FACTORY_BANK}
     ${SOURCES_FACTORY_BANK_HANDLER}
 )
-target_include_directories (${PROJECT_NAME}_factory_bank PRIVATE src)
-
-target_link_libraries (${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_factory_bank)
