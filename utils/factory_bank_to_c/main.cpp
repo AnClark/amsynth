@@ -234,7 +234,7 @@ bool start_convert(const std::string bank_directory, const std::string output_di
             fprintf(out_cpp, "    %s.file_array = %s;\n", symbol, iter->file_array_name.c_str());
             fprintf(out_cpp, "    %s.file_array_size = %d;\n\n", symbol, iter->file_array_size);
 #endif
-            fprintf(out_cpp, "    factory_banks_list.push_back(%s);\n\n", symbol);
+            fprintf(out_cpp, "    factory_banks_list.push_back(std::move(%s));\n\n", symbol);
         } else {
             fprintf(out_cpp, "// WARNING: Bank file \"%s\" is failed to read\n", iter->name.c_str());
             fprintf(out_cpp, "//          (%s)\n\n", iter->file_path.c_str());
